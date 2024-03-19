@@ -1,6 +1,10 @@
 package it.govpay.gde.mapper;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -8,10 +12,10 @@ import org.mapstruct.Named;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import it.govpay.gde.beans.DatiPagoPA;
-import it.govpay.gde.beans.DettaglioRichiesta;
-import it.govpay.gde.beans.DettaglioRisposta;
 import it.govpay.gde.beans.Evento;
+import it.govpay.gde.entity.DatiPagoPA;
+import it.govpay.gde.entity.DettaglioRichiesta;
+import it.govpay.gde.entity.DettaglioRisposta;
 import it.govpay.gde.entity.EventoEntity;
 import it.govpay.gde.entity.EventoEntity.CategoriaEvento;
 import it.govpay.gde.entity.EventoEntity.RuoloEvento;
@@ -68,34 +72,55 @@ public interface EventoMapper {
 		}
 	}
 	
+	@Named("convertData")
+	public default OffsetDateTime localDateTimeToOffsetDateTime(LocalDateTime localDateTime) {
+		if(localDateTime == null) return null;
+		
+		ZoneId romeZoneId = ZoneId.of("Europe/Rome");
+        ZoneOffset zoneOffset = romeZoneId.getRules().getOffset(localDateTime);
+		return localDateTime.atOffset(zoneOffset);
+	}
+	
+	public it.govpay.gde.beans.DatiPagoPA eventoEntityDatiPagoPAToEventoDatiPagoPA(DatiPagoPA datiPagoPA);
+	
+	@Mapping(target = "dataOraRichiesta", source="dataOraRichiesta", qualifiedByName = "convertData")
+	public it.govpay.gde.beans.DettaglioRichiesta eventoEntityDettaglioRichiestaToEventoDettaglioRichiesta(DettaglioRichiesta dettaglioRichiesta);
+	
+	@Mapping(target = "dataOraRisposta", source="dataOraRisposta", qualifiedByName = "convertData")
+	public it.govpay.gde.beans.DettaglioRisposta eventoEntityDettaglioRispostaToEventoDettaglioRisposta(DettaglioRisposta dettaglioRisposta);
+
+	
 	@Named("convertDatiPagoPA")
-	public default DatiPagoPA convertDatiPagoPA(String datiPagoPA) {
+	public default it.govpay.gde.beans.DatiPagoPA convertDatiPagoPA(String datiPagoPA) {
 		if(datiPagoPA == null) return null;
 		ObjectMapper objectMapper = JpaConverterObjectMapperFactory.jpaConverterObjectMapper();
 		try {
-			return objectMapper.readValue(datiPagoPA, DatiPagoPA.class);
+			DatiPagoPA datiPagoPAEntity = objectMapper.readValue(datiPagoPA, DatiPagoPA.class);
+			return eventoEntityDatiPagoPAToEventoDatiPagoPA(datiPagoPAEntity);
 		} catch (IOException ex) {
 			throw new AttributeConverterException(ex);
 		}
 	}
 	
 	@Named("convertParametriRichiesta")
-	public default DettaglioRichiesta convertParametriRichiesta(byte[] parametriRichiesta) {
+	public default it.govpay.gde.beans.DettaglioRichiesta convertParametriRichiesta(byte[] parametriRichiesta) {
 		if(parametriRichiesta == null) return null;
 		ObjectMapper objectMapper = JpaConverterObjectMapperFactory.jpaConverterObjectMapper();
 		try {
-			return objectMapper.readValue(parametriRichiesta, DettaglioRichiesta.class);
+			DettaglioRichiesta dettaglioRichiestaEntity = objectMapper.readValue(parametriRichiesta, DettaglioRichiesta.class);
+			return eventoEntityDettaglioRichiestaToEventoDettaglioRichiesta(dettaglioRichiestaEntity);
 		} catch (IOException ex) {
 			throw new AttributeConverterException(ex);
 		}
 	}
 	
 	@Named("convertParametriRisposta")
-	public default DettaglioRisposta convertParametriRisposta(byte[] parametriRisposta) {
+	public default it.govpay.gde.beans.DettaglioRisposta convertParametriRisposta(byte[] parametriRisposta) {
 		if(parametriRisposta == null) return null;
 		ObjectMapper objectMapper = JpaConverterObjectMapperFactory.jpaConverterObjectMapper();
 		try {
-			return objectMapper.readValue(parametriRisposta, DettaglioRisposta.class);
+			DettaglioRisposta dettaglioRispostaEntity = objectMapper.readValue(parametriRisposta, DettaglioRisposta.class);
+			return eventoEntityDettaglioRispostaToEventoDettaglioRisposta(dettaglioRispostaEntity);
 		} catch (IOException ex) {
 			throw new AttributeConverterException(ex);
 		}

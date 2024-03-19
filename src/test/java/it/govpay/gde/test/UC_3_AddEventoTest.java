@@ -3,7 +3,6 @@ package it.govpay.gde.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -491,7 +490,8 @@ class UC_3_AddEventoTest {
 		nuovoEvento.setIdRiconciliazione(1l);
 		nuovoEvento.setIdTracciato(1l);
 		nuovoEvento.setIuv("iuv");
-		//nuovoEvento.setParametriRichiesta(null);
+		DettaglioRichiesta parametriRichiesta = new DettaglioRichiesta();
+		nuovoEvento.setParametriRichiesta(parametriRichiesta);
 		//nuovoEvento.setParametriRisposta(null);
 //		nuovoEvento.setRuolo(RuoloEvento.CLIENT);
 		nuovoEvento.setSeverita(1);
@@ -539,7 +539,7 @@ class UC_3_AddEventoTest {
 		assertEquals(nuovoEvento.getIdRiconciliazione(), eventoDetail.getInt("idRiconciliazione"));
 		assertEquals(nuovoEvento.getIdTracciato(), eventoDetail.getInt("idTracciato"));
 		assertEquals(nuovoEvento.getIuv(), eventoDetail.getString("iuv"));
-		assertNull(eventoDetail.get("parametriRichiesta"));
+		assertNotNull(eventoDetail.get("parametriRichiesta"));
 		assertNull(eventoDetail.get("parametriRisposta"));
 		assertNull(eventoDetail.get("ruolo"));
 		assertEquals(nuovoEvento.getSeverita(), eventoDetail.getInt("severita"));
@@ -550,24 +550,54 @@ class UC_3_AddEventoTest {
 	}
 	
 	@Test
-	void UC_3_06_AddEvento_NoBody() throws Exception {
-		String body = "";
+	void UC_3_06_AddEvento_EmptyBody() throws Exception {
+		String body = "{}";
 
 		MvcResult result = this.mockMvc.perform(post(Costanti.EVENTI_PATH)
 				.content(body)
 				.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isBadRequest())
+				.andExpect(status().isCreated())
+				.andExpect(header().exists("Location"))
 				.andReturn();
 
+		String locationDettaglioEvento = result.getResponse().getHeader("Location");
+
+		// estrazione idEvento
+		int idEvento = Integer.parseInt(locationDettaglioEvento.substring(locationDettaglioEvento.lastIndexOf("/")+1));
+
+		result = this.mockMvc.perform(get(Costanti.EVENTO_PATH,idEvento))
+				.andExpect(status().isOk())
+				.andReturn();
 		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
-        JsonObject problem = reader.readObject();
-        assertNotNull(problem.getString("type"));
-        assertNotNull(problem.getString("title"));
-        assertNotNull(problem.getString("detail"));
-        assertEquals(400, problem.getInt("status"));
-        assertEquals("Bad Request", problem.getString("title"));
-        assertTrue(problem.getString("detail").contains("Required request body is missing"));
-        assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
+		JsonObject eventoDetail = reader.readObject();
+
+		assertNotNull(eventoDetail);
+		assertEquals(idEvento, eventoDetail.getInt("id"));
+		assertNull(eventoDetail.get("categoriaEvento"));
+		assertNull(eventoDetail.get("ccp"));
+		assertNull(eventoDetail.get("clusterId"));
+		assertNull(eventoDetail.get("componente"));
+		assertNull(eventoDetail.get("dataEvento"));
+		assertNull(eventoDetail.get("datiPagoPA"));
+		assertNull(eventoDetail.get("dettaglioEsito"));
+		assertNull(eventoDetail.get("durataEvento"));
+		assertNull(eventoDetail.get("esito"));        
+		assertNull(eventoDetail.get("idA2A"));
+		assertNull(eventoDetail.get("idDominio"));
+		assertNull(eventoDetail.get("idFr"));
+		assertNull(eventoDetail.get("idPagamento"));
+		assertNull(eventoDetail.get("idPendenza"));
+		assertNull(eventoDetail.get("idRiconciliazione"));
+		assertNull(eventoDetail.get("idTracciato"));
+		assertNull(eventoDetail.get("iuv"));
+		assertNull(eventoDetail.get("parametriRichiesta"));
+		assertNull(eventoDetail.get("parametriRisposta"));
+		assertNull(eventoDetail.get("ruolo"));
+		assertNull(eventoDetail.get("severita"));
+		assertNull(eventoDetail.get("sottotipoEsito"));
+		assertNull(eventoDetail.get("sottotipoEvento"));
+		assertNull(eventoDetail.get("tipoEvento"));
+		assertNull(eventoDetail.get("transactionId"));
 		
 		
 	}

@@ -138,7 +138,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	protected ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(
 			HttpMediaTypeNotAcceptableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
 		
-		return new ResponseEntity<>("acceptable MIME type:" + MediaType.APPLICATION_JSON_VALUE, HttpStatus.NOT_ACCEPTABLE);
+		return buildResponseProblem(HttpStatus.NOT_ACCEPTABLE, ex.getLocalizedMessage(), request.getHeader(HttpHeaders.ACCEPT));
 	}
 	
 	
