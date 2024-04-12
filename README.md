@@ -9,56 +9,50 @@ Per la compilazione eseguire il seguente comando, verranno eseguiti anche i test
 
 
 ``` bash
-mvn clean install -P [jar|war] -Denv=[localhost]
+mvn clean install -P [jar|war]
 ```
 
 Il profilo permette di selezionare il packaging dei progetti (jar o war).
 
-Il parametro env invece consente di valorizzare le properties per l'ambiente di installazione scelto (default: localhost).
-
 Per l'avvio dell'applicativo come standalone eseguire:
 
 ``` bash
-mvn spring-boot:run -Denv=[localhost]
+mvn spring-boot:run
 ```
 
 # Configurazione
 
-All'interno del file di filtro si possono definire le seguenti proprieta':
+All'interno del file `application.properties` sono definite le seguenti proprieta':
 
 
 ``` bash
-# ------------ DIRECTORY LAVORO ESTERNA -----------
-
-it.govpay.gde.resource.path=[WORK_DIR]
-
-# ------------ LOGGING -------------------
-
-it.govpay.gde.log.path=[LOG_DIR]
-it.govpay.gde.log.level=[LOG_LEVEL]
-
 # ----------- SPRING SERVLET ------------
 
-it.govpay.gde.server.port=[Porta su cui esporre il servizio in caso di avvio come applicazione standalone]
+server.port=[Porta su cui esporre il servizio in caso di avvio come applicazione standalone]
 
-it.govpay.gde.spring.mvc.servlet.path=[Basepath servizi]
+spring.mvc.servlet.path=[Basepath servizi]
 
 # Abilitazione Endpoint /actuator/health/liveness
-it.govpay.gde.spring.actuator.path=[Basepath dove esporre i servizi di stato applicazione]
+management.endpoints.web.base-path=[Basepath dove esporre i servizi di stato applicazione]
 
 # ------------ HIBERNATE & JPA -------------------
 
 # Configurazione DB
-#it.govpay.gde.spring.datasource.jndiName=[JNDI NAME del datasource]
-it.govpay.gde.spring.datasource.url=[URL CONNESSIONE DB]
-it.govpay.gde.spring.datasource.driverClassName=[CLASSE DRIVER JDBC]
-it.govpay.gde.spring.datasource.username=[USERNAME DB]
-it.govpay.gde.spring.datasource.password=[PASSWORD DB]
+spring.datasource.jndiName=[JNDI NAME del datasource]
+spring.datasource.url=[URL CONNESSIONE DB]
+spring.datasource.driverClassName=[CLASSE DRIVER JDBC]
+spring.datasource.username=[USERNAME DB]
+spring.datasource.password=[PASSWORD DB]
 
-it.govpay.gde.spring.jpa.database-platform=[DIALECT JPA]
+spring.jpa.database-platform=[DIALECT JPA]
+spring.jpa.properties.hibernate.dialect=[DIALECT JPA]
 
-it.govpay.gde.spring.jpa.hibernate.ddl-auto=[Configura il comportamento di Hibernate nella generazione dello schema del database.]
+spring.jpa.hibernate.ddl-auto=[Configura il comportamento di Hibernate nella generazione dello schema del database.]
 
 # -------------- BUSINESS LOGIC PROPERTIES  ----------------
 
+gde.time-zone=[TimeZone dell'applicazione]
+
 ```
+
+All'interno del file `log4j2.xml` si definisce la configurazione di log dell'applicazione.
