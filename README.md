@@ -20,6 +20,13 @@ Per l'avvio dell'applicativo come standalone eseguire:
 mvn spring-boot:run
 ```
 
+Per sovrascrivere le proprieta' definite nel file `application.properties` utilizzare il seguente sistema:
+
+``` bash
+mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.datasource.url=[NUOVO_VALORE] ..."
+
+```
+
 # Configurazione
 
 All'interno del file `application.properties` sono definite le seguenti proprieta':
