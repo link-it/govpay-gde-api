@@ -2,11 +2,8 @@ package it.govpay.gde.controller;
 
 import java.time.OffsetDateTime;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpHeaders;
@@ -24,6 +21,7 @@ import it.govpay.gde.beans.EsitoEvento;
 import it.govpay.gde.beans.Evento;
 import it.govpay.gde.beans.ListaEventi;
 import it.govpay.gde.beans.NuovoEvento;
+import it.govpay.gde.beans.PageInfo;
 import it.govpay.gde.beans.RuoloEvento;
 import it.govpay.gde.entity.EventoEntity;
 import it.govpay.gde.exception.ResourceNotFoundException;
@@ -33,24 +31,28 @@ import it.govpay.gde.repository.EventoFilters;
 import it.govpay.gde.repository.EventoRepository;
 import it.govpay.gde.repository.LimitOffsetPageRequest;
 import it.govpay.gde.utils.ListaUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 @Controller
-//@RequestMapping("/api/v1")
 public class GdeController implements EventiApi{
 	
 	private Logger logger = LoggerFactory.getLogger(GdeController.class);
 	
-	@Autowired
 	private EventoRepository eventoRepository;
 	
-	@Autowired
-	NuovoEventoMapperImpl nuovoEventoMapperImpl;
+	private NuovoEventoMapperImpl nuovoEventoMapperImpl;
 	
-	@Autowired
-	EventoMapperImpl eventoMapperImpl;
+	private EventoMapperImpl eventoMapperImpl;
+	
+	public GdeController(EventoRepository eventoRepository, NuovoEventoMapperImpl nuovoEventoMapperImpl, EventoMapperImpl eventoMapperImpl) {
+		this.eventoRepository = eventoRepository;
+		this.nuovoEventoMapperImpl = nuovoEventoMapperImpl;
+		this.eventoMapperImpl = eventoMapperImpl;
+    }
 
 	@Override
-	public ResponseEntity<Void> addEvento(NuovoEvento nuovoEvento) {
+	public ResponseEntity<Void> addEvento(@Valid NuovoEvento nuovoEvento) {
 		this.logger.debug("Salvataggio evento: {}", nuovoEvento);
 		
 		EventoEntity entity = this.nuovoEventoMapperImpl.nuovoEventoToEventoEntity(nuovoEvento);
@@ -65,7 +67,7 @@ public class GdeController implements EventiApi{
 
 		headers.add("Location", ListaUtils.createLocation(curRequest, entity.getId()));
 		
-		return new ResponseEntity<Void>(headers, HttpStatus.CREATED);
+		return new ResponseEntity<>(headers, HttpStatus.CREATED);
 	}
 
 	@Override
@@ -78,8 +80,13 @@ public class GdeController implements EventiApi{
 		
 		this.logger.debug("Ricerca eventi...");
 		
-		Specification<EventoEntity> spec = creaFiltriDiRicerca(dataDa, dataA, idDominio, iuv, ccp, idA2A, idPendenza,
-				categoriaEvento, esito, ruolo, sottotipoEvento, tipoEvento, componente, severitaDa, severitaA);
+		Specification<EventoEntity> spec = creaFiltriDiRicercaDate(dataDa, dataA);
+		
+		spec = creaFiltriDiRicercaEvento(spec, categoriaEvento, esito, ruolo, sottotipoEvento, tipoEvento, componente);
+		
+		spec = creaFiltriDiRicercaDatiPendenza(spec, idDominio, iuv, ccp, idA2A, idPendenza);
+		
+		spec = creaFiltriDiRicercaSeverita(spec, severitaDa, severitaA);
 		
 		LimitOffsetPageRequest pageRequest = new LimitOffsetPageRequest(offset, limit, EventoFilters.sort());
 		
@@ -87,7 +94,10 @@ public class GdeController implements EventiApi{
 		
 		HttpServletRequest curRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 		
-		ListaEventi ret = ListaUtils.buildPaginatedList(eventi, pageRequest.limit, curRequest, new ListaEventi());
+		PageInfo pageInfo = new PageInfo(offset,limit);
+		pageInfo.setTotal(eventi.getTotalElements()); 
+		
+		ListaEventi ret = ListaUtils.buildPaginatedList(eventi, pageRequest.limit, curRequest, new ListaEventi(pageInfo, null));
 		
 		for (EventoEntity user : eventi) {
 			ret.addItemsItem(this.eventoMapperImpl.eventoEntityToEvento(user));
@@ -97,11 +107,8 @@ public class GdeController implements EventiApi{
 		
 		return ResponseEntity.ok(ret);
 	}
-
-	private Specification<EventoEntity> creaFiltriDiRicerca(OffsetDateTime dataDa, OffsetDateTime dataA, String idDominio,
-			String iuv, String ccp, String idA2A, String idPendenza, CategoriaEvento categoriaEvento, EsitoEvento esito,
-			RuoloEvento ruolo, String sottotipoEvento, String tipoEvento, ComponenteEvento componente,
-			Integer severitaDa, Integer severitaA) {
+	
+	private Specification<EventoEntity> creaFiltriDiRicercaDate(OffsetDateTime dataDa, OffsetDateTime dataA) {
 		Specification<EventoEntity> spec = EventoFilters.empty();
 		
 		if(dataDa != null) {
@@ -110,27 +117,16 @@ public class GdeController implements EventiApi{
 		if(dataA != null) {
 			spec = spec.and(EventoFilters.byDataA(dataA));
 		}
-		if(idDominio != null) {
-			spec = spec.and(EventoFilters.byIdDominio(idDominio));
+		return spec;
+	}
+
+	private Specification<EventoEntity> creaFiltriDiRicercaEvento(Specification<EventoEntity> spec, CategoriaEvento categoriaEvento, EsitoEvento esito,
+			RuoloEvento ruolo, String sottotipoEvento, String tipoEvento, ComponenteEvento componente) {
+		
+		if (spec == null) {
+			spec = EventoFilters.empty();
 		}
-		if(iuv != null) {
-			spec = spec.and(EventoFilters.byIuv(iuv));
-		}
-		if(ccp != null) {
-			spec = spec.and(EventoFilters.byCcp(ccp));
-		}
-		if(idA2A != null) {
-			spec = spec.and(EventoFilters.byIdA2A(idA2A));
-		}
-		if(idPendenza != null) {
-			spec = spec.and(EventoFilters.byIdPendenza(idPendenza));
-		}
-		if(severitaDa != null) {
-			spec = spec.and(EventoFilters.bySeveritaDa(severitaDa));
-		}
-		if(severitaA != null) {
-			spec = spec.and(EventoFilters.bySeveritaA(severitaA));
-		}
+		
 		if(tipoEvento != null) {
 			spec = spec.and(EventoFilters.byTipoEvento(tipoEvento));
 		}
@@ -151,6 +147,45 @@ public class GdeController implements EventiApi{
 		}
 		return spec;
 	}
+	
+	private Specification<EventoEntity> creaFiltriDiRicercaDatiPendenza(Specification<EventoEntity> spec, String idDominio,
+			String iuv, String ccp, String idA2A, String idPendenza) {
+		if (spec == null) {
+			spec = EventoFilters.empty();
+		}
+		
+		if(idDominio != null) {
+			spec = spec.and(EventoFilters.byIdDominio(idDominio));
+		}
+		if(iuv != null) {
+			spec = spec.and(EventoFilters.byIuv(iuv));
+		}
+		if(ccp != null) {
+			spec = spec.and(EventoFilters.byCcp(ccp));
+		}
+		if(idA2A != null) {
+			spec = spec.and(EventoFilters.byIdA2A(idA2A));
+		}
+		if(idPendenza != null) {
+			spec = spec.and(EventoFilters.byIdPendenza(idPendenza));
+		}
+		return spec;
+	}
+	
+	private Specification<EventoEntity> creaFiltriDiRicercaSeverita(Specification<EventoEntity> spec, Integer severitaDa, Integer severitaA) {
+		
+		if (spec == null) {
+			spec = EventoFilters.empty();
+		}
+		
+		if(severitaDa != null) {
+			spec = spec.and(EventoFilters.bySeveritaDa(severitaDa));
+		}
+		if(severitaA != null) {
+			spec = spec.and(EventoFilters.bySeveritaA(severitaA));
+		}
+		return spec;
+	}
 
 	@Override
 	public ResponseEntity<Evento> getEventoById(Long id) {
@@ -158,7 +193,7 @@ public class GdeController implements EventiApi{
 		
 		ResponseEntity<Evento> res = this.eventoRepository.findById(id).map(this.eventoMapperImpl::eventoEntityToEvento)
 		.map(ResponseEntity::ok) 
-		.orElseThrow(() -> new ResourceNotFoundException());
+		.orElseThrow(ResourceNotFoundException::new);
 		
 		this.logger.debug("Lettura evento completata.");
 		return res;

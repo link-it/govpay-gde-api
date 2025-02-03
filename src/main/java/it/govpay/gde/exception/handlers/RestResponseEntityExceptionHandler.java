@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -99,15 +100,14 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	
 	@Override
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-			org.springframework.http.HttpHeaders headers, HttpStatus status, WebRequest request) {
+			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		var error = ex.getBindingResult().getAllErrors().get(0);
 		return 	buildResponseProblem(HttpStatus.BAD_REQUEST, RestResponseEntityExceptionHandler.extractValidationError(error),request.getHeader(HttpHeaders.ACCEPT));
 	}
-	
-	
+
 	@Override
-	protected ResponseEntity<Object> handleHttpMessageNotReadable(
-			HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
+	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
+			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		
 		String msg;
 		if (ex.getCause() instanceof ValueInstantiationException) {
@@ -119,13 +119,13 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	}
 	
 	@Override
-	protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
+	protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex,	HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		return 	buildResponseProblem(HttpStatus.BAD_REQUEST,ex.getLocalizedMessage(), request.getHeader(HttpHeaders.ACCEPT));
 	}
 
 	
 	@Override
-	protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
+	protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		return buildResponseProblem(HttpStatus.BAD_REQUEST,ex.getLocalizedMessage(), request.getHeader(HttpHeaders.ACCEPT));
 	}
 	
@@ -136,7 +136,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	 */
 	@Override
 	protected ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(
-			HttpMediaTypeNotAcceptableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
+			HttpMediaTypeNotAcceptableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		
 		return buildResponseProblem(HttpStatus.NOT_ACCEPTABLE, ex.getLocalizedMessage(), request.getHeader(HttpHeaders.ACCEPT));
 	}
@@ -144,7 +144,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	
 	@Override
 	protected ResponseEntity<Object> handleExceptionInternal(
-			Exception ex, @Nullable Object body, HttpHeaders headers, HttpStatus status, WebRequest request) {
+			Exception ex, @Nullable Object body, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 
 		if (HttpStatus.INTERNAL_SERVER_ERROR.equals(status)) {
 			request.setAttribute(WebUtils.ERROR_EXCEPTION_ATTRIBUTE, ex, RequestAttributes.SCOPE_REQUEST);
@@ -158,8 +158,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	 * 	
 	 */
 	public static String extractValidationError(ObjectError error) {
-		if (error instanceof FieldError) {			
-			var ferror = (FieldError) error;
+		if (error instanceof FieldError ferror) {			
 			
 			return "Field error in object '" + error.getObjectName() + "' on field '" + ferror.getField() +
 					"': rejected value [" + ObjectUtils.nullSafeToString(ferror.getRejectedValue()) + "]; " +

@@ -2,9 +2,9 @@ package it.govpay.gde.repository;
 
 import java.time.OffsetDateTime;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -121,13 +121,10 @@ public class EventoFilters {
 
 	public static Specification<EventoEntity> byRuoloEvento(RuoloEvento ruolo) {
 		it.govpay.gde.entity.EventoEntity.RuoloEvento r= null;
-		switch (ruolo) {
-		case CLIENT:
+		if(RuoloEvento.CLIENT.equals(ruolo)) {
 			r = it.govpay.gde.entity.EventoEntity.RuoloEvento.C;
-			break;
-		case SERVER:
+		} else {
 			r = it.govpay.gde.entity.EventoEntity.RuoloEvento.S;
-			break;
 		}
 		
 		return addEqualCondition(EventoEntity_.RUOLO_EVENTO,r);

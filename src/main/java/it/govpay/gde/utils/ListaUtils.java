@@ -3,7 +3,7 @@ package it.govpay.gde.utils;
 import java.lang.reflect.Method;
 import java.util.Map.Entry;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.data.domain.Page;
 import org.springframework.web.util.DefaultUriBuilderFactory;
@@ -53,9 +53,7 @@ public class ListaUtils {
 //			destList.add(Link.of(lastLink,"last"));
 		}
 		
-		PageInfo pageInfo = new PageInfo();
-		pageInfo.setLimit(limit);
-		pageInfo.setOffset(startOffset);
+		PageInfo pageInfo = new PageInfo(startOffset, limit);
 		pageInfo.setTotal(results.getTotalElements());
 		set(destList, "Page", pageInfo);
 		

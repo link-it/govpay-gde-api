@@ -2,16 +2,10 @@ package it.govpay.gde.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.ByteArrayInputStream;
-
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +23,11 @@ import it.govpay.gde.Application;
 import it.govpay.gde.entity.EventoEntity;
 import it.govpay.gde.repository.EventoRepository;
 import it.govpay.gde.test.costanti.Costanti;
+import jakarta.json.Json;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
+import jakarta.json.JsonValue;
 
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
@@ -79,9 +78,9 @@ class UC_2_GetEventoTest {
         assertEquals(3, eventoDetail.getInt("severita"));
         assertEquals("GovPay", eventoDetail.getString("clusterId"));
         assertEquals("fb695ba5-dbcb-4e11-bcf6-561bce720521", eventoDetail.getString("transactionId"));
-        assertNull(eventoDetail.get("parametriRichiesta"));
-        assertNull(eventoDetail.get("parametriRisposta"));
-        assertNull(eventoDetail.get("datiPagoPA"));
+        assertEquals(JsonValue.NULL, eventoDetail.get("parametriRichiesta"));
+        assertEquals(JsonValue.NULL, eventoDetail.get("parametriRisposta"));
+        assertEquals(JsonValue.NULL, eventoDetail.get("datiPagoPA"));
         
 	}
 	
@@ -117,7 +116,7 @@ class UC_2_GetEventoTest {
         assertNotNull(problem.getString("detail"));
         assertEquals(500, problem.getInt("status"));
         assertEquals("Internal Server Error", problem.getString("title"));
-        assertEquals("Failed to convert value of type 'java.lang.String' to required type 'java.lang.Long'; nested exception is java.lang.NumberFormatException: For input string: \"XXX\"", problem.getString("detail"));
+        assertEquals("Method parameter 'id': Failed to convert value of type 'java.lang.String' to required type 'java.lang.Long'; For input string: \"XXX\"", problem.getString("detail"));
         assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-500-internal-server-error", problem.getString("type"));
         
         // TODO vedere perche' non viene lanciato 400
@@ -139,7 +138,7 @@ class UC_2_GetEventoTest {
         assertNotNull(problem.getString("detail"));
         assertEquals(406, problem.getInt("status"));
         assertEquals("Not Acceptable", problem.getString("title"));
-        assertEquals("Could not find acceptable representation", problem.getString("detail"));
+        assertEquals("No acceptable representation", problem.getString("detail"));
         assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-406-not-acceptable", problem.getString("type"));
 	}
 	

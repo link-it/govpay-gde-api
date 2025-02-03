@@ -8,11 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.ByteArrayInputStream;
 import java.text.SimpleDateFormat;
+import java.time.OffsetDateTime;
 import java.util.TimeZone;
-
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +32,11 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import it.govpay.gde.Application;
 import it.govpay.gde.test.costanti.Costanti;
+import it.govpay.gde.utils.OffsetDateTimeDeserializer;
+import it.govpay.gde.utils.OffsetDateTimeSerializer;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
 
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
@@ -51,12 +53,17 @@ class UC_4_AddEventoFailTest {
 
 	@BeforeEach
 	public void init() {
-		SimpleDateFormat sdf = new SimpleDateFormat(Costanti.PATTERN_DATA_JSON_YYYY_MM_DD_T_HH_MM_SS);
+		SimpleDateFormat sdf = new SimpleDateFormat(Costanti.PATTERN_TIMESTAMP_3_YYYY_MM_DD_T_HH_MM_SS_SSSXXX);
 		sdf.setTimeZone(TimeZone.getTimeZone("Europe/Rome"));
 		sdf.setLenient(false);
-		
+
 		mapper = JsonMapper.builder().build();
-		mapper.registerModule(new JavaTimeModule());
+
+		JavaTimeModule javaTimeModule = new JavaTimeModule();
+		javaTimeModule.addSerializer(OffsetDateTime.class, new OffsetDateTimeSerializer());
+		javaTimeModule.addDeserializer(OffsetDateTime.class, new OffsetDateTimeDeserializer());
+		mapper.registerModule(javaTimeModule); 
+
 		mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
 		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 		mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
@@ -104,7 +111,7 @@ class UC_4_AddEventoFailTest {
         assertNotNull(problem.getString("detail"));
         assertEquals(400, problem.getInt("status"));
         assertEquals("Bad Request", problem.getString("title"));
-        assertTrue(problem.getString("detail").contains("Content type 'text/html' not supported"));
+        assertTrue(problem.getString("detail").contains("Content-Type 'text/html' is not supported"));
         assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
 		
 	}
@@ -126,7 +133,7 @@ class UC_4_AddEventoFailTest {
         assertNotNull(problem.getString("detail"));
         assertEquals(400, problem.getInt("status"));
         assertEquals("Bad Request", problem.getString("title"));
-        assertTrue(problem.getString("detail").contains("Cannot construct instance of `it.govpay.gde.beans.CategoriaEvento`, problem: Unexpected value 'XXX'\n at [Source: (org.springframework.util.StreamUtils$NonClosingInputStream); line: 1, column: 20] (through reference chain: it.govpay.gde.beans.NuovoEvento[\"categoriaEvento\"])"));
+        assertTrue(problem.getString("detail").contains("Cannot construct instance of `it.govpay.gde.beans.CategoriaEvento`, problem: Unexpected value 'XXX'\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 20] (through reference chain: it.govpay.gde.beans.NuovoEvento[\"categoriaEvento\"])"));
         assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
 		
 	}
@@ -145,9 +152,9 @@ class UC_4_AddEventoFailTest {
 				.andReturn();
 		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
 		JsonObject problem = reader.readObject();
-		assertNotNull(problem.getString("type"));
-		assertNotNull(problem.getString("title"));
-		assertNotNull(problem.getString("detail"));
+		assertNotNull(problem.get("type"));
+		assertNotNull(problem.get("title"));
+		assertNotNull(problem.get("detail"));
 		assertEquals(503, problem.getInt("status"));
 		assertEquals("Service Unavailable", problem.getString("title"));
 		assertEquals("Request can't be satisfaied at the moment", problem.getString("detail"));

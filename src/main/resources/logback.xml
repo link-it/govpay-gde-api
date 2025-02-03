@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration status="WARN" monitorInterval="30">
+
+	<Property name="LOG_PATTERN"
+		value="%d{ISO8601} %-5level [%t] %C{1.}: %msg%n%throwable" />
+			
+	<!-- Property for the log file destination -->
+    <property name="LOG_DIR" value="${logging.file.dir:/var/log/govpay}"/>
+
+	<appender name="STDOUT"
+		class="ch.qos.logback.core.ConsoleAppender">
+		<encoder
+			class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>%white(%d{ISO8601}) %highlight(%-5level) [%blue(%t)]
+				%yellow(%C{1}): %msg%n%throwable</Pattern>
+		</encoder>
+	</appender>
+	
+    <appender name="core" class="ch.qos.logback.core.FileAppender">
+        <!-- Specify the file name or path -->
+        <file>${LOG_DIR}/govpay-gde_core.log</file>
+        
+        <!-- Rolling policy (optional, to create new log files periodically) -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Define the log file rollover interval (e.g., every day) -->
+            <fileNamePattern>${LOG_DIR}/govpay-gde_core-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory> <!-- Keep log files for the last 30 days -->
+        </rollingPolicy>
+
+        <!-- Log file encoder (formatting the log output) -->
+        <encoder>
+            <pattern>%white(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1}): %msg%n%throwable</pattern>
+        </encoder>
+    </appender>
+    
+    <appender name="spring" class="ch.qos.logback.core.FileAppender">
+        <!-- Specify the file name or path -->
+        <file>${LOG_DIR}/govpay-gde_spring.log</file>
+        
+        <!-- Rolling policy (optional, to create new log files periodically) -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Define the log file rollover interval (e.g., every day) -->
+            <fileNamePattern>${LOG_DIR}/govpay-gde_spring-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory> <!-- Keep log files for the last 30 days -->
+        </rollingPolicy>
+
+        <!-- Log file encoder (formatting the log output) -->
+        <encoder>
+            <pattern>%white(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1}): %msg%n%throwable</pattern>
+        </encoder>
+    </appender>
+    
+     <appender name="hibernate" class="ch.qos.logback.core.FileAppender">
+        <!-- Specify the file name or path -->
+        <file>${LOG_DIR}/govpay-gde_hibernate.log</file>
+        
+        <!-- Rolling policy (optional, to create new log files periodically) -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- Define the log file rollover interval (e.g., every day) -->
+            <fileNamePattern>${LOG_DIR}/govpay-gde_hibernate-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory> <!-- Keep log files for the last 30 days -->
+        </rollingPolicy>
+
+        <!-- Log file encoder (formatting the log output) -->
+        <encoder>
+            <pattern>%white(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1}): %msg%n%throwable</pattern>
+        </encoder>
+    </appender>
+
+	<logger name="it.govpay" level="INFO" additivity="false">
+		<appender-ref ref="core" />
+	</logger>
+
+	<logger name="org.springframework" level="ERROR"
+		additivity="false">
+		<appender-ref ref="spring" />
+	</logger>
+
+	<!-- Hibernate -->
+	<logger name="org.hibernate" level="ERROR" additivity="false">
+		<appender-ref ref="hibernate" />
+	</logger>
+
+	<Logger name="org.hibernate.type.descriptor.sql" level="ERROR" additivity="false">
+		<AppenderRef ref="hibernate" />
+	</Logger>
+
+	<root level="ERROR">
+		<appender-ref ref="core" />
+	</root>
+
+</configuration>
+	
