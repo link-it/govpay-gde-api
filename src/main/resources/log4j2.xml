@@ -2,7 +2,7 @@
 <Configuration status="WARN" monitorInterval="30">
     <Properties>
         <Property name="LOG_PATTERN">%p &lt;%d{dd-MM-yyyy HH:mm:ss.SSS}&gt; %C.%M(%L): %m %n %n</Property>
-	<Property name="APP_LOG_ROOT">/var/log/govpay</Property>
+		<Property name="APP_LOG_ROOT">/var/log/govpay</Property>
     </Properties>
     <Appenders>
         <RollingFile name="hibernate"
@@ -39,7 +39,7 @@
     <Loggers>
 
         
-        <Logger name="it.govpay" level="DEBUG" additivity="false">
+        <Logger name="it.govpay" level="INFO" additivity="false">
             <AppenderRef ref="core" />
         </Logger>
 
@@ -47,15 +47,15 @@
             <AppenderRef ref="spring" />
         </Logger>
 
-        <Logger name="org.hibernate" level="debug" additivity="false">
+        <Logger name="org.hibernate" level="error" additivity="false">
             <AppenderRef ref="hibernate" />
         </Logger>
 
-        <Logger name="org.hibernate.type.descriptor.sql" level="trace" additivity="false">
+        <Logger name="org.hibernate.type.descriptor.sql" level="error" additivity="false">
             <AppenderRef ref="hibernate" />
         </Logger>
 
-        <Root level="DEBUG">
+        <Root level="INFO">
             <AppenderRef ref="core" />
         </Root>
 

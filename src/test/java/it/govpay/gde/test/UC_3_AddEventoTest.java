@@ -2,7 +2,6 @@ package it.govpay.gde.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -12,13 +11,7 @@ import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.TimeZone;
-
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -50,6 +43,13 @@ import it.govpay.gde.beans.Header;
 import it.govpay.gde.beans.NuovoEvento;
 import it.govpay.gde.beans.RuoloEvento;
 import it.govpay.gde.test.costanti.Costanti;
+import it.govpay.gde.utils.OffsetDateTimeDeserializer;
+import it.govpay.gde.utils.OffsetDateTimeSerializer;
+import jakarta.json.Json;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
+import jakarta.json.JsonValue;
 
 @SpringBootTest(classes = Application.class)
 @AutoConfigureMockMvc
@@ -66,12 +66,17 @@ class UC_3_AddEventoTest {
 
 	@BeforeEach
 	public void init() {
-		SimpleDateFormat sdf = new SimpleDateFormat(Costanti.PATTERN_DATA_JSON_YYYY_MM_DD_T_HH_MM_SS);
+		SimpleDateFormat sdf = new SimpleDateFormat(Costanti.PATTERN_DATA_JSON_YYYY_MM_DD_T_HH_MM_SS_SSS_Z);
 		sdf.setTimeZone(TimeZone.getTimeZone("Europe/Rome"));
 		sdf.setLenient(false);
-		
+
 		mapper = JsonMapper.builder().build();
-		mapper.registerModule(new JavaTimeModule());
+
+		JavaTimeModule javaTimeModule = new JavaTimeModule();
+		javaTimeModule.addSerializer(OffsetDateTime.class, new OffsetDateTimeSerializer());
+		javaTimeModule.addDeserializer(OffsetDateTime.class, new OffsetDateTimeDeserializer());
+		mapper.registerModule(javaTimeModule); 
+
 		mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
 		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 		mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
@@ -134,8 +139,8 @@ class UC_3_AddEventoTest {
 		assertEquals(nuovoEvento.getCcp(), eventoDetail.getString("ccp"));
 		assertEquals(nuovoEvento.getClusterId(), eventoDetail.getString("clusterId"));
 		assertEquals(nuovoEvento.getComponente().toString(), eventoDetail.getString("componente"));
-		assertEquals(nuovoEvento.getDataEvento().format(DateTimeFormatter.ISO_DATE_TIME), eventoDetail.getString("dataEvento"));
-		assertNull(eventoDetail.get("datiPagoPA"));
+		assertEquals(nuovoEvento.getDataEvento().format(Costanti.DEFAULT_FORMATTER), eventoDetail.getString("dataEvento"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("datiPagoPA"));
 		assertEquals(nuovoEvento.getDettaglioEsito(), eventoDetail.getString("dettaglioEsito"));
 		assertEquals(nuovoEvento.getDurataEvento().intValue(), eventoDetail.getInt("durataEvento"));
 		assertEquals(nuovoEvento.getEsito().toString(), eventoDetail.getString("esito"));        
@@ -147,8 +152,8 @@ class UC_3_AddEventoTest {
 		assertEquals(nuovoEvento.getIdRiconciliazione(), eventoDetail.getInt("idRiconciliazione"));
 		assertEquals(nuovoEvento.getIdTracciato(), eventoDetail.getInt("idTracciato"));
 		assertEquals(nuovoEvento.getIuv(), eventoDetail.getString("iuv"));
-		assertNull(eventoDetail.get("parametriRichiesta"));
-		assertNull(eventoDetail.get("parametriRisposta"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("parametriRichiesta"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("parametriRisposta"));
 		assertEquals(nuovoEvento.getRuolo().toString(), eventoDetail.getString("ruolo"));
 		assertEquals(nuovoEvento.getSeverita(), eventoDetail.getInt("severita"));
 		assertEquals(nuovoEvento.getSottotipoEsito(), eventoDetail.getString("sottotipoEsito"));
@@ -227,7 +232,7 @@ class UC_3_AddEventoTest {
 		assertEquals(nuovoEvento.getCcp(), eventoDetail.getString("ccp"));
 		assertEquals(nuovoEvento.getClusterId(), eventoDetail.getString("clusterId"));
 		assertEquals(nuovoEvento.getComponente().toString(), eventoDetail.getString("componente"));
-		assertEquals(nuovoEvento.getDataEvento().format(DateTimeFormatter.ISO_DATE_TIME), eventoDetail.getString("dataEvento"));
+		assertEquals(nuovoEvento.getDataEvento().format(Costanti.DEFAULT_FORMATTER), eventoDetail.getString("dataEvento"));
 		assertNotNull(eventoDetail.get("datiPagoPA"));
 		assertEquals(nuovoEvento.getDettaglioEsito(), eventoDetail.getString("dettaglioEsito"));
 		assertEquals(nuovoEvento.getDurataEvento().intValue(), eventoDetail.getInt("durataEvento"));
@@ -240,15 +245,15 @@ class UC_3_AddEventoTest {
 		assertEquals(nuovoEvento.getIdRiconciliazione(), eventoDetail.getInt("idRiconciliazione"));
 		assertEquals(nuovoEvento.getIdTracciato(), eventoDetail.getInt("idTracciato"));
 		assertEquals(nuovoEvento.getIuv(), eventoDetail.getString("iuv"));
-		assertNull(eventoDetail.get("parametriRichiesta"));
-		assertNull(eventoDetail.get("parametriRisposta"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("parametriRichiesta"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("parametriRisposta"));
 		assertEquals(nuovoEvento.getRuolo().toString(), eventoDetail.getString("ruolo"));
 		assertEquals(nuovoEvento.getSeverita(), eventoDetail.getInt("severita"));
 		assertEquals(nuovoEvento.getSottotipoEsito(), eventoDetail.getString("sottotipoEsito"));
 		assertEquals(nuovoEvento.getSottotipoEvento(), eventoDetail.getString("sottotipoEvento"));
 		assertEquals(nuovoEvento.getTipoEvento(), eventoDetail.getString("tipoEvento"));
 		assertEquals(nuovoEvento.getTransactionId(), eventoDetail.getString("transactionId"));
-		
+
 		JsonObject datiPagoPADetail = eventoDetail.getJsonObject("datiPagoPA");
 		assertEquals(datiPagoPA.getIdCanale(), datiPagoPADetail.getString("idCanale"));
 		assertEquals(datiPagoPA.getIdDominio(), datiPagoPADetail.getString("idDominio"));
@@ -265,7 +270,7 @@ class UC_3_AddEventoTest {
 		assertEquals(datiPagoPA.getSct(), datiPagoPADetail.getString("sct"));
 		assertEquals(datiPagoPA.getTipoVersamento(), datiPagoPADetail.getString("tipoVersamento"));
 	}
-	
+
 	@Test
 	void UC_3_03_AddEvento_ParametriRichiestaOk() throws Exception {
 		NuovoEvento nuovoEvento = new NuovoEvento();
@@ -288,8 +293,7 @@ class UC_3_AddEventoTest {
 		nuovoEvento.setIuv("iuv");
 		DettaglioRichiesta parametriRichiesta = new DettaglioRichiesta();
 		parametriRichiesta.setDataOraRichiesta(OffsetDateTime.now());
-		Header header = new Header();
-		header.setNome("Accept");
+		Header header = new Header("Accept");
 		header.setValore("application/json");
 		parametriRichiesta.addHeadersItem(header );
 		parametriRichiesta.setMethod("GET");
@@ -332,8 +336,8 @@ class UC_3_AddEventoTest {
 		assertEquals(nuovoEvento.getCcp(), eventoDetail.getString("ccp"));
 		assertEquals(nuovoEvento.getClusterId(), eventoDetail.getString("clusterId"));
 		assertEquals(nuovoEvento.getComponente().toString(), eventoDetail.getString("componente"));
-		assertEquals(nuovoEvento.getDataEvento().format(DateTimeFormatter.ISO_DATE_TIME), eventoDetail.getString("dataEvento"));
-		assertNull(eventoDetail.get("datiPagoPA"));
+		assertEquals(nuovoEvento.getDataEvento().format(Costanti.DEFAULT_FORMATTER), eventoDetail.getString("dataEvento"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("datiPagoPA"));
 		assertEquals(nuovoEvento.getDettaglioEsito(), eventoDetail.getString("dettaglioEsito"));
 		assertEquals(nuovoEvento.getDurataEvento().intValue(), eventoDetail.getInt("durataEvento"));
 		assertEquals(nuovoEvento.getEsito().toString(), eventoDetail.getString("esito"));        
@@ -346,31 +350,31 @@ class UC_3_AddEventoTest {
 		assertEquals(nuovoEvento.getIdTracciato(), eventoDetail.getInt("idTracciato"));
 		assertEquals(nuovoEvento.getIuv(), eventoDetail.getString("iuv"));
 		assertNotNull(eventoDetail.get("parametriRichiesta"));
-		assertNull(eventoDetail.get("parametriRisposta"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("parametriRisposta"));
 		assertEquals(nuovoEvento.getRuolo().toString(), eventoDetail.getString("ruolo"));
 		assertEquals(nuovoEvento.getSeverita(), eventoDetail.getInt("severita"));
 		assertEquals(nuovoEvento.getSottotipoEsito(), eventoDetail.getString("sottotipoEsito"));
 		assertEquals(nuovoEvento.getSottotipoEvento(), eventoDetail.getString("sottotipoEvento"));
 		assertEquals(nuovoEvento.getTipoEvento(), eventoDetail.getString("tipoEvento"));
 		assertEquals(nuovoEvento.getTransactionId(), eventoDetail.getString("transactionId"));
-		
+
 		JsonObject parametriRichiestaDetail = eventoDetail.getJsonObject("parametriRichiesta");
-		assertEquals(parametriRichiesta.getDataOraRichiesta().format(DateTimeFormatter.ISO_DATE_TIME), parametriRichiestaDetail.getString("dataOraRichiesta"));
+		assertEquals(parametriRichiesta.getDataOraRichiesta().format(Costanti.DEFAULT_FORMATTER), parametriRichiestaDetail.getString("dataOraRichiesta"));
 		assertNotNull(parametriRichiestaDetail.get("headers"));
 		assertEquals(parametriRichiesta.getMethod(), parametriRichiestaDetail.getString("method"));
 		assertEquals(parametriRichiesta.getPayload(), parametriRichiestaDetail.getString("payload"));
 		assertEquals(parametriRichiesta.getPrincipal(), parametriRichiestaDetail.getString("principal"));
 		assertEquals(parametriRichiesta.getUrl(), parametriRichiestaDetail.getString("url"));
 		assertEquals(parametriRichiesta.getUtente(), parametriRichiestaDetail.getString("utente"));
-		
+
 		JsonArray headersDetail = parametriRichiestaDetail.getJsonArray("headers");
 		assertEquals(1, headersDetail.size());
 		JsonObject headerDetail = headersDetail.getJsonObject(0);
-		
+
 		assertEquals(header.getNome(), headerDetail.getString("nome"));
 		assertEquals(header.getValore(), headerDetail.getString("valore"));
 	}
-	
+
 	@Test
 	void UC_3_04_AddEvento_ParametriRispostaOk() throws Exception {
 		NuovoEvento nuovoEvento = new NuovoEvento();
@@ -393,13 +397,12 @@ class UC_3_AddEventoTest {
 		nuovoEvento.setIuv("iuv");
 		DettaglioRisposta parametriRisposta = new DettaglioRisposta();
 		parametriRisposta.setDataOraRisposta(OffsetDateTime.now());
-		Header header = new Header();
-		header.setNome("ContentType");
+		Header header = new Header("ContentType");
 		header.setValore("application/json");
 		parametriRisposta.addHeadersItem(header );
 		parametriRisposta.setPayload("{}");
 		parametriRisposta.setStatus(BigDecimal.valueOf(200));
-//		nuovoEvento.setParametriRichiesta(parametriRichiesta );
+		//		nuovoEvento.setParametriRichiesta(parametriRichiesta );
 		nuovoEvento.setParametriRisposta(parametriRisposta);
 		nuovoEvento.setRuolo(RuoloEvento.CLIENT);
 		nuovoEvento.setSeverita(1);
@@ -434,8 +437,8 @@ class UC_3_AddEventoTest {
 		assertEquals(nuovoEvento.getCcp(), eventoDetail.getString("ccp"));
 		assertEquals(nuovoEvento.getClusterId(), eventoDetail.getString("clusterId"));
 		assertEquals(nuovoEvento.getComponente().toString(), eventoDetail.getString("componente"));
-		assertEquals(nuovoEvento.getDataEvento().format(DateTimeFormatter.ISO_DATE_TIME), eventoDetail.getString("dataEvento"));
-		assertNull(eventoDetail.get("datiPagoPA"));
+		assertEquals(nuovoEvento.getDataEvento().format(Costanti.DEFAULT_FORMATTER), eventoDetail.getString("dataEvento"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("datiPagoPA"));
 		assertEquals(nuovoEvento.getDettaglioEsito(), eventoDetail.getString("dettaglioEsito"));
 		assertEquals(nuovoEvento.getDurataEvento().intValue(), eventoDetail.getInt("durataEvento"));
 		assertEquals(nuovoEvento.getEsito().toString(), eventoDetail.getString("esito"));        
@@ -447,7 +450,7 @@ class UC_3_AddEventoTest {
 		assertEquals(nuovoEvento.getIdRiconciliazione(), eventoDetail.getInt("idRiconciliazione"));
 		assertEquals(nuovoEvento.getIdTracciato(), eventoDetail.getInt("idTracciato"));
 		assertEquals(nuovoEvento.getIuv(), eventoDetail.getString("iuv"));
-		assertNull(eventoDetail.get("parametriRichiesta"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("parametriRichiesta"));
 		assertNotNull(eventoDetail.get("parametriRisposta"));
 		assertEquals(nuovoEvento.getRuolo().toString(), eventoDetail.getString("ruolo"));
 		assertEquals(nuovoEvento.getSeverita(), eventoDetail.getInt("severita"));
@@ -455,25 +458,25 @@ class UC_3_AddEventoTest {
 		assertEquals(nuovoEvento.getSottotipoEvento(), eventoDetail.getString("sottotipoEvento"));
 		assertEquals(nuovoEvento.getTipoEvento(), eventoDetail.getString("tipoEvento"));
 		assertEquals(nuovoEvento.getTransactionId(), eventoDetail.getString("transactionId"));
-		
+
 		JsonObject parametriRispostaDetail = eventoDetail.getJsonObject("parametriRisposta");
-		assertEquals(parametriRisposta.getDataOraRisposta().format(DateTimeFormatter.ISO_DATE_TIME), parametriRispostaDetail.getString("dataOraRisposta"));
+		assertEquals(parametriRisposta.getDataOraRisposta().format(Costanti.DEFAULT_FORMATTER), parametriRispostaDetail.getString("dataOraRisposta"));
 		assertNotNull(parametriRispostaDetail.get("headers"));
 		assertEquals(parametriRisposta.getPayload(), parametriRispostaDetail.getString("payload"));
 		assertEquals(parametriRisposta.getStatus().intValue(), parametriRispostaDetail.getInt("status"));
-		
+
 		JsonArray headersDetail = parametriRispostaDetail.getJsonArray("headers");
 		assertEquals(1, headersDetail.size());
 		JsonObject headerDetail = headersDetail.getJsonObject(0);
-		
+
 		assertEquals(header.getNome(), headerDetail.getString("nome"));
 		assertEquals(header.getValore(), headerDetail.getString("valore"));
 	}
-	
+
 	@Test
 	void UC_3_05_AddEvento_CampiNullOk() throws Exception {
 		NuovoEvento nuovoEvento = new NuovoEvento();
-//		nuovoEvento.setCategoriaEvento(CategoriaEvento.UTENTE);
+		//		nuovoEvento.setCategoriaEvento(CategoriaEvento.UTENTE);
 		nuovoEvento.setCcp("ccp");
 		nuovoEvento.setClusterId("GovPay");
 		nuovoEvento.setComponente(ComponenteEvento.API_BACKOFFICE);
@@ -493,7 +496,7 @@ class UC_3_AddEventoTest {
 		DettaglioRichiesta parametriRichiesta = new DettaglioRichiesta();
 		nuovoEvento.setParametriRichiesta(parametriRichiesta);
 		//nuovoEvento.setParametriRisposta(null);
-//		nuovoEvento.setRuolo(RuoloEvento.CLIENT);
+		//		nuovoEvento.setRuolo(RuoloEvento.CLIENT);
 		nuovoEvento.setSeverita(1);
 		nuovoEvento.setSottotipoEsito("200");
 		nuovoEvento.setSottotipoEvento("testAddEvento");
@@ -522,12 +525,12 @@ class UC_3_AddEventoTest {
 
 		assertNotNull(eventoDetail);
 		assertEquals(idEvento, eventoDetail.getInt("id"));
-		assertNull(eventoDetail.get("categoriaEvento"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("categoriaEvento"));
 		assertEquals(nuovoEvento.getCcp(), eventoDetail.getString("ccp"));
 		assertEquals(nuovoEvento.getClusterId(), eventoDetail.getString("clusterId"));
 		assertEquals(nuovoEvento.getComponente().toString(), eventoDetail.getString("componente"));
-		assertEquals(nuovoEvento.getDataEvento().format(DateTimeFormatter.ISO_DATE_TIME), eventoDetail.getString("dataEvento"));
-		assertNull(eventoDetail.get("datiPagoPA"));
+		assertEquals(nuovoEvento.getDataEvento().format(Costanti.DEFAULT_FORMATTER), eventoDetail.getString("dataEvento"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("datiPagoPA"));
 		assertEquals(nuovoEvento.getDettaglioEsito(), eventoDetail.getString("dettaglioEsito"));
 		assertEquals(nuovoEvento.getDurataEvento().intValue(), eventoDetail.getInt("durataEvento"));
 		assertEquals(nuovoEvento.getEsito().toString(), eventoDetail.getString("esito"));        
@@ -540,15 +543,15 @@ class UC_3_AddEventoTest {
 		assertEquals(nuovoEvento.getIdTracciato(), eventoDetail.getInt("idTracciato"));
 		assertEquals(nuovoEvento.getIuv(), eventoDetail.getString("iuv"));
 		assertNotNull(eventoDetail.get("parametriRichiesta"));
-		assertNull(eventoDetail.get("parametriRisposta"));
-		assertNull(eventoDetail.get("ruolo"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("parametriRisposta"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("ruolo"));
 		assertEquals(nuovoEvento.getSeverita(), eventoDetail.getInt("severita"));
 		assertEquals(nuovoEvento.getSottotipoEsito(), eventoDetail.getString("sottotipoEsito"));
 		assertEquals(nuovoEvento.getSottotipoEvento(), eventoDetail.getString("sottotipoEvento"));
 		assertEquals(nuovoEvento.getTipoEvento(), eventoDetail.getString("tipoEvento"));
 		assertEquals(nuovoEvento.getTransactionId(), eventoDetail.getString("transactionId"));
 	}
-	
+
 	@Test
 	void UC_3_06_AddEvento_EmptyBody() throws Exception {
 		String body = "{}";
@@ -568,37 +571,38 @@ class UC_3_AddEventoTest {
 		result = this.mockMvc.perform(get(Costanti.EVENTO_PATH,idEvento))
 				.andExpect(status().isOk())
 				.andReturn();
+		System.out.println("RES: "+result.getResponse().getContentAsString());
 		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
 		JsonObject eventoDetail = reader.readObject();
 
 		assertNotNull(eventoDetail);
 		assertEquals(idEvento, eventoDetail.getInt("id"));
-		assertNull(eventoDetail.get("categoriaEvento"));
-		assertNull(eventoDetail.get("ccp"));
-		assertNull(eventoDetail.get("clusterId"));
-		assertNull(eventoDetail.get("componente"));
-		assertNull(eventoDetail.get("dataEvento"));
-		assertNull(eventoDetail.get("datiPagoPA"));
-		assertNull(eventoDetail.get("dettaglioEsito"));
-		assertNull(eventoDetail.get("durataEvento"));
-		assertNull(eventoDetail.get("esito"));        
-		assertNull(eventoDetail.get("idA2A"));
-		assertNull(eventoDetail.get("idDominio"));
-		assertNull(eventoDetail.get("idFr"));
-		assertNull(eventoDetail.get("idPagamento"));
-		assertNull(eventoDetail.get("idPendenza"));
-		assertNull(eventoDetail.get("idRiconciliazione"));
-		assertNull(eventoDetail.get("idTracciato"));
-		assertNull(eventoDetail.get("iuv"));
-		assertNull(eventoDetail.get("parametriRichiesta"));
-		assertNull(eventoDetail.get("parametriRisposta"));
-		assertNull(eventoDetail.get("ruolo"));
-		assertNull(eventoDetail.get("severita"));
-		assertNull(eventoDetail.get("sottotipoEsito"));
-		assertNull(eventoDetail.get("sottotipoEvento"));
-		assertNull(eventoDetail.get("tipoEvento"));
-		assertNull(eventoDetail.get("transactionId"));
-		
-		
+		assertEquals(JsonValue.NULL, eventoDetail.get("categoriaEvento"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("ccp"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("clusterId"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("componente"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("dataEvento"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("datiPagoPA"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("dettaglioEsito"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("durataEvento"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("esito"));        
+		assertEquals(JsonValue.NULL, eventoDetail.get("idA2A"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("idDominio"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("idFr"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("idPagamento"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("idPendenza"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("idRiconciliazione"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("idTracciato"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("iuv"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("parametriRichiesta"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("parametriRisposta"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("ruolo"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("severita"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("sottotipoEsito"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("sottotipoEvento"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("tipoEvento"));
+		assertEquals(JsonValue.NULL, eventoDetail.get("transactionId"));
+
+
 	}
 }

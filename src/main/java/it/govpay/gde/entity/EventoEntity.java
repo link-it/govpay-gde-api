@@ -1,21 +1,21 @@
 package it.govpay.gde.entity;
 
+import java.sql.Types;
 import java.time.OffsetDateTime;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Lob;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
 
-import org.hibernate.annotations.Type;
-
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Lob;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -88,8 +88,8 @@ public class EventoEntity {
 	
 //	@Lob
 //	@Convert(converter = DatiPagoPAConverter.class)
-	@Type(type = "org.hibernate.type.TextType")
-//	private String descrizione;
+//	@Type(value = "org.hibernate.type.TextType")
+	@JdbcTypeCode(Types.LONGVARCHAR) 
 	@Column(name = "dati_pago_pa")
 	private String datiPagoPA;
 	
@@ -130,14 +130,16 @@ public class EventoEntity {
 	private String transactionId;
 	
 	@Lob
-	@Type(type="org.hibernate.type.BinaryType")
+//	@Type(type="org.hibernate.type.BinaryType")
 //	@Convert(converter = DettaglioRichiestaConverter.class)
+	@JdbcTypeCode(Types.VARBINARY)
 	@Column(name = "parametri_richiesta")
 	private byte[] parametriRichiesta;
 	
 	@Lob
-	@Type(type="org.hibernate.type.BinaryType")
+//	@Type(type="org.hibernate.type.BinaryType")
 //	@Convert(converter = DettaglioRispostaConverter.class)
+	@JdbcTypeCode(Types.VARBINARY)
 	@Column(name = "parametri_risposta")
 	private byte[] parametriRisposta;
 	
