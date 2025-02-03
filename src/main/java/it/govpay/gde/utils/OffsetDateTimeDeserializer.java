@@ -16,15 +16,15 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
 
+import it.govpay.gde.costanti.Costanti;
+
 public class OffsetDateTimeDeserializer extends StdScalarDeserializer<OffsetDateTime> {
 
 	private transient Logger logger = LoggerFactory.getLogger(OffsetDateTimeDeserializer.class);
 
 	private static final long serialVersionUID = 1L;
 
-	private transient DateTimeFormatter formatterMillis = DateTimeFormatter.ofPattern(
-			"yyyy-MM-dd'T'HH:mm:ss[.[SSSSSSSSS][SSSSSSSS][SSSSSSS][SSSSSS][SSSSS][SSSS][SSS][SS][S]XXX]",
-			Locale.getDefault());
+	private transient DateTimeFormatter formatterMillis = DateTimeFormatter.ofPattern(Costanti.PATTERN_YYYY_MM_DD_T_HH_MM_SS_MILLIS_VARIABILI_XXX, Locale.getDefault());
 
 	public OffsetDateTimeDeserializer() {
 		super(OffsetDateTime.class);
