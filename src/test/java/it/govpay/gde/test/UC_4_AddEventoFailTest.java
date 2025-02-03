@@ -53,7 +53,7 @@ class UC_4_AddEventoFailTest {
 
 	@BeforeEach
 	public void init() {
-		SimpleDateFormat sdf = new SimpleDateFormat(Costanti.PATTERN_DATA_JSON_YYYY_MM_DD_T_HH_MM_SS_SSS_Z);
+		SimpleDateFormat sdf = new SimpleDateFormat(Costanti.PATTERN_TIMESTAMP_3_YYYY_MM_DD_T_HH_MM_SS_SSSXXX);
 		sdf.setTimeZone(TimeZone.getTimeZone("Europe/Rome"));
 		sdf.setLenient(false);
 
