@@ -83,7 +83,7 @@ public class GdeController implements EventiApi{
 		Specification<EventoEntity> spec = creaFiltriDiRicercaDate(dataDa, dataA);
 		
 		spec = creaFiltriDiRicercaEvento(spec, categoriaEvento, esito, ruolo, sottotipoEvento, tipoEvento, componente);
-		
+
 		spec = creaFiltriDiRicercaDatiPendenza(spec, idDominio, iuv, ccp, idA2A, idPendenza);
 		
 		spec = creaFiltriDiRicercaSeverita(spec, severitaDa, severitaA);
