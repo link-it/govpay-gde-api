@@ -53,7 +53,7 @@ public class GdeController implements EventiApi{
 
 	@Override
 	public ResponseEntity<Void> addEvento(@Valid NuovoEvento nuovoEvento) {
-		this.logger.debug("Salvataggio evento: {}", nuovoEvento);
+		this.logger.info("Salvataggio evento: {}", nuovoEvento);
 		
 		EventoEntity entity = this.nuovoEventoMapperImpl.nuovoEventoToEventoEntity(nuovoEvento);
 		
@@ -78,7 +78,7 @@ public class GdeController implements EventiApi{
 			EsitoEvento esito, RuoloEvento ruolo, String sottotipoEvento, String tipoEvento,
 			ComponenteEvento componente, Integer severitaDa, Integer severitaA) {
 		
-		this.logger.debug("Ricerca eventi...");
+		this.logger.info("Ricerca eventi...");
 		
 		Specification<EventoEntity> spec = creaFiltriDiRicercaDate(dataDa, dataA);
 		
@@ -103,7 +103,7 @@ public class GdeController implements EventiApi{
 			ret.addItemsItem(this.eventoMapperImpl.eventoEntityToEvento(user));
 		}
 		
-		this.logger.debug("Ricerca eventi completata");
+		this.logger.info("Ricerca eventi completata");
 		
 		return ResponseEntity.ok(ret);
 	}
@@ -189,13 +189,13 @@ public class GdeController implements EventiApi{
 
 	@Override
 	public ResponseEntity<Evento> getEventoById(Long id) {
-		this.logger.debug("Lettura evento: {}", id);
+		this.logger.info("Lettura evento: {}", id);
 		
 		ResponseEntity<Evento> res = this.eventoRepository.findById(id).map(this.eventoMapperImpl::eventoEntityToEvento)
 		.map(ResponseEntity::ok) 
 		.orElseThrow(ResourceNotFoundException::new);
 		
-		this.logger.debug("Lettura evento completata.");
+		this.logger.info("Lettura evento completata.");
 		return res;
 	}
 }
