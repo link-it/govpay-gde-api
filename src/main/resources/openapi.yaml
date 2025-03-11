@@ -410,6 +410,7 @@ components:
         - API_HYPERSIC_APK
         - API_USER
         - GOVPAY
+        - API_LEGACY
     DatiPagoPA:
       type: object
       properties:
