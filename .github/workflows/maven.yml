@@ -48,7 +48,7 @@ jobs:
       uses: actions/upload-artifact@v4.6.0
       with:
         name: govpay-gde-api
-        path: target/govpay-gde-api.war,target/govpay-gde-api.jar
+        path: target/govpay-gde-api.*
 
   release:
     runs-on: ubuntu-latest
