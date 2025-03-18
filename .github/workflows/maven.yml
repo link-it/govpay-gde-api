@@ -40,12 +40,15 @@ jobs:
       run: mvn clean install -P war -DskipTests -Ddependency-check.skip=true
     - name: Build Jar with Maven
       run: mvn install -P jar -DskipTests -Ddependency-check.skip=true
+      
+    - name: List files in target directory
+      run: ls -l target/
 
     - name: Upload artifact to GitHub
       uses: actions/upload-artifact@v4.6.0
       with:
         name: govpay-gde-api
-        path: target/govpay-gde-api.war | target/govpay-gde-api.jar
+        path: target/govpay-gde-api.war,target/govpay-gde-api.jar
 
   release:
     runs-on: ubuntu-latest
