@@ -78,7 +78,7 @@ jobs:
       id: create_release
       uses: softprops/action-gh-release@v2.2.1
       with:
-        files: 
+        files: |
           target/govpay-gde-api-${{ github.ref_name }}.war 
           target/govpay-gde-api-${{ github.ref_name }}.jar
       env:
