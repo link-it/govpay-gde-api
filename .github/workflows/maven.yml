@@ -36,14 +36,17 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
-    - name: Build with Maven
+    - name: Build War with Maven
       run: mvn clean install -P war -DskipTests -Ddependency-check.skip=true
+    - name: Build Jar with Maven
+      run: mvn install -P jar -DskipTests -Ddependency-check.skip=true
 
     - name: Upload artifact to GitHub
       uses: actions/upload-artifact@v4.6.0
       with:
         name: govpay-gde-api
         path: target/govpay-gde-api.war
+        path: target/govpay-gde-api.jar
 
   release:
     runs-on: ubuntu-latest
@@ -63,6 +66,9 @@ jobs:
     - name: Rename the artifact file to include the tag
       run: cp target/govpay-gde-api.war target/govpay-gde-api-${{ github.ref_name }}.war  # Rinominare il file
 
+    - name: Rename the artifact file to include the tag
+      run: cp target/govpay-gde-api.jar target/govpay-gde-api-${{ github.ref_name }}.jar  # Rinominare il file
+
     - name: List files in target directory
       run: ls -l target/
 
@@ -70,6 +76,6 @@ jobs:
       id: create_release
       uses: softprops/action-gh-release@v2.2.1
       with:
-        files: target/govpay-gde-api-${{ github.ref_name }}.war  # Specifica l'artefatto da caricare
+        files: target/govpay-gde-api-${{ github.ref_name }}.war | target/govpay-gde-api-${{ github.ref_name }}.jar
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
