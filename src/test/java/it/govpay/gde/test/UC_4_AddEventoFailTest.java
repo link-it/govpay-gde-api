@@ -52,7 +52,7 @@ class UC_4_AddEventoFailTest {
 	private ObjectMapper mapper;
 
 	@BeforeEach
-	public void init() {
+	void init() {
 		SimpleDateFormat sdf = new SimpleDateFormat(Costanti.PATTERN_TIMESTAMP_3_YYYY_MM_DD_T_HH_MM_SS_SSSXXX);
 		sdf.setTimeZone(TimeZone.getTimeZone("Europe/Rome"));
 		sdf.setLenient(false);
@@ -145,9 +145,6 @@ class UC_4_AddEventoFailTest {
 		MvcResult result = this.mockMvc.perform(post(Costanti.EVENTI_PATH)
 				.content(body)
 				.contentType(MediaType.APPLICATION_JSON))
-//				.andExpect(status().isBadRequest())
-//				.andReturn();
-
 				.andExpect(status().is5xxServerError())
 				.andReturn();
 		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
@@ -159,19 +156,5 @@ class UC_4_AddEventoFailTest {
 		assertEquals("Service Unavailable", problem.getString("title"));
 		assertEquals("Request can't be satisfaied at the moment", problem.getString("detail"));
 		assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-503-service-unavailable", problem.getString("type"));
-
-		
-// TODO vedere perche' non viene lanciato 400
-		
-//		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
-//        JsonObject problem = reader.readObject();
-//        assertNotNull(problem.getString("type"));
-//        assertNotNull(problem.getString("title"));
-//        assertNotNull(problem.getString("detail"));
-//        assertEquals(400, problem.getInt("status"));
-//        assertEquals("Bad Request", problem.getString("title"));
-//        assertTrue(problem.getString("detail").contains("Cannot construct instance of `it.govpay.gde.beans.CategoriaEvento`, problem: Unexpected value 'XXX'\n at [Source: (org.springframework.util.StreamUtils$NonClosingInputStream); line: 1, column: 20] (through reference chain: it.govpay.gde.beans.NuovoEvento[\"categoriaEvento\"])"));
-//        assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
-		
 	}
 }

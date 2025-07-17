@@ -65,7 +65,7 @@ class UC_3_AddEventoTest {
 	private ObjectMapper mapper;
 
 	@BeforeEach
-	public void init() {
+	void init() {
 		SimpleDateFormat sdf = new SimpleDateFormat(Costanti.PATTERN_TIMESTAMP_3_YYYY_MM_DD_T_HH_MM_SS_SSSXXX);
 		sdf.setTimeZone(TimeZone.getTimeZone("Europe/Rome"));
 		sdf.setLenient(false);
@@ -92,7 +92,6 @@ class UC_3_AddEventoTest {
 		nuovoEvento.setClusterId("GovPay");
 		nuovoEvento.setComponente(ComponenteEvento.API_BACKOFFICE);
 		nuovoEvento.setDataEvento(OffsetDateTime.now());
-		// nuovoEvento.setDatiPagoPA(null);
 		nuovoEvento.setDettaglioEsito("dettaglioEsito");
 		nuovoEvento.setDurataEvento(10l);
 		nuovoEvento.setEsito(EsitoEvento.OK);
@@ -104,8 +103,6 @@ class UC_3_AddEventoTest {
 		nuovoEvento.setIdRiconciliazione(1l);
 		nuovoEvento.setIdTracciato(1l);
 		nuovoEvento.setIuv("iuv");
-		//nuovoEvento.setParametriRichiesta(null);
-		//nuovoEvento.setParametriRisposta(null);
 		nuovoEvento.setRuolo(RuoloEvento.CLIENT);
 		nuovoEvento.setSeverita(1);
 		nuovoEvento.setSottotipoEsito("200");
@@ -197,8 +194,6 @@ class UC_3_AddEventoTest {
 		nuovoEvento.setIdRiconciliazione(1l);
 		nuovoEvento.setIdTracciato(1l);
 		nuovoEvento.setIuv("iuv");
-		//nuovoEvento.setParametriRichiesta(null);
-		//nuovoEvento.setParametriRisposta(null);
 		nuovoEvento.setRuolo(RuoloEvento.SERVER);
 		nuovoEvento.setSeverita(1);
 		nuovoEvento.setSottotipoEsito("200");
@@ -279,7 +274,6 @@ class UC_3_AddEventoTest {
 		nuovoEvento.setClusterId("GovPay");
 		nuovoEvento.setComponente(ComponenteEvento.API_BACKOFFICE);
 		nuovoEvento.setDataEvento(OffsetDateTime.now());
-		// nuovoEvento.setDatiPagoPA(null);
 		nuovoEvento.setDettaglioEsito("dettaglioEsito");
 		nuovoEvento.setDurataEvento(10l);
 		nuovoEvento.setEsito(EsitoEvento.OK);
@@ -302,7 +296,6 @@ class UC_3_AddEventoTest {
 		parametriRichiesta.setUrl("http://localhost:8080/gde/addEvento");
 		parametriRichiesta.setUtente("mariorossi");
 		nuovoEvento.setParametriRichiesta(parametriRichiesta );
-		//nuovoEvento.setParametriRisposta(null);
 		nuovoEvento.setRuolo(RuoloEvento.CLIENT);
 		nuovoEvento.setSeverita(1);
 		nuovoEvento.setSottotipoEsito("200");
@@ -383,7 +376,6 @@ class UC_3_AddEventoTest {
 		nuovoEvento.setClusterId("GovPay");
 		nuovoEvento.setComponente(ComponenteEvento.API_BACKOFFICE);
 		nuovoEvento.setDataEvento(OffsetDateTime.now());
-		// nuovoEvento.setDatiPagoPA(null);
 		nuovoEvento.setDettaglioEsito("dettaglioEsito");
 		nuovoEvento.setDurataEvento(10l);
 		nuovoEvento.setEsito(EsitoEvento.OK);
@@ -402,7 +394,6 @@ class UC_3_AddEventoTest {
 		parametriRisposta.addHeadersItem(header );
 		parametriRisposta.setPayload("{}");
 		parametriRisposta.setStatus(BigDecimal.valueOf(200));
-		//		nuovoEvento.setParametriRichiesta(parametriRichiesta );
 		nuovoEvento.setParametriRisposta(parametriRisposta);
 		nuovoEvento.setRuolo(RuoloEvento.CLIENT);
 		nuovoEvento.setSeverita(1);
@@ -476,12 +467,10 @@ class UC_3_AddEventoTest {
 	@Test
 	void UC_3_05_AddEvento_CampiNullOk() throws Exception {
 		NuovoEvento nuovoEvento = new NuovoEvento();
-		//		nuovoEvento.setCategoriaEvento(CategoriaEvento.UTENTE);
 		nuovoEvento.setCcp("ccp");
 		nuovoEvento.setClusterId("GovPay");
 		nuovoEvento.setComponente(ComponenteEvento.API_BACKOFFICE);
 		nuovoEvento.setDataEvento(OffsetDateTime.now());
-		// nuovoEvento.setDatiPagoPA(null);
 		nuovoEvento.setDettaglioEsito("dettaglioEsito");
 		nuovoEvento.setDurataEvento(10l);
 		nuovoEvento.setEsito(EsitoEvento.OK);
@@ -495,8 +484,6 @@ class UC_3_AddEventoTest {
 		nuovoEvento.setIuv("iuv");
 		DettaglioRichiesta parametriRichiesta = new DettaglioRichiesta();
 		nuovoEvento.setParametriRichiesta(parametriRichiesta);
-		//nuovoEvento.setParametriRisposta(null);
-		//		nuovoEvento.setRuolo(RuoloEvento.CLIENT);
 		nuovoEvento.setSeverita(1);
 		nuovoEvento.setSottotipoEsito("200");
 		nuovoEvento.setSottotipoEvento("testAddEvento");
