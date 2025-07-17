@@ -92,12 +92,10 @@ public class GdeController implements EventiApi{
 		
 		Page<EventoEntity> eventi = this.eventoRepository.findAll(spec, pageRequest.pageable);
 		
-		HttpServletRequest curRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-		
 		PageInfo pageInfo = new PageInfo(offset,limit);
 		pageInfo.setTotal(eventi.getTotalElements()); 
 		
-		ListaEventi ret = ListaUtils.buildPaginatedList(eventi, pageRequest.limit, curRequest, new ListaEventi(pageInfo, null));
+		ListaEventi ret = ListaUtils.buildPaginatedList(eventi, pageRequest.limit, new ListaEventi(pageInfo, null));
 		
 		for (EventoEntity user : eventi) {
 			ret.addItemsItem(this.eventoMapperImpl.eventoEntityToEvento(user));
