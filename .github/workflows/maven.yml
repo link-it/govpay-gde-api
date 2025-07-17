@@ -48,7 +48,7 @@ jobs:
     - name: Build War with Maven
       run: mvn clean install -P war -DskipTests -Ddependency-check.skip=true
     - name: Build Jar with Maven
-      run: mvn install -P jar -Dspring.profiles.active=test -Duser.timezone=Europe/Rome -DnvdApiKey=$NVD_API_KEY -Ddependency-check.skip=true
+      run: mvn install -P jar -Dspring.profiles.active=test -Duser.timezone=Europe/Rome -DnvdApiKey=$NVD_API_KEY
       env:
         NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
