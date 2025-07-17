@@ -120,22 +120,6 @@
 					<scope>provided</scope>
 				</dependency>
 			</dependencies>
-			<build>
-				<plugins>
-					<plugin>
-				        <artifactId>maven-war-plugin</artifactId>
-				        <configuration>
-				          <webResources>
-				            <resource>
-				              <directory>src/main/webapp/META-INF</directory>
-				              <targetPath>META-INF</targetPath>
-				              <filtering>false</filtering>
-				            </resource>
-				          </webResources>
-				        </configuration>
-				      </plugin>
-				</plugins>
-			</build>
 		</profile>
 	</profiles>
 
