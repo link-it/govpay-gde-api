@@ -72,6 +72,8 @@
 		<h2.version>2.3.232</h2.version>
 		
 		<json-smart.version>2.5.2</json-smart.version>
+
+		<sonar.coverage.exclusions>**/test/**,**/*Test*.java</sonar.coverage.exclusions>
 	</properties>
 
 	<profiles>
@@ -118,6 +120,22 @@
 					<scope>provided</scope>
 				</dependency>
 			</dependencies>
+			<build>
+				<plugins>
+					<plugin>
+				        <artifactId>maven-war-plugin</artifactId>
+				        <configuration>
+				          <webResources>
+				            <resource>
+				              <directory>src/main/webapp/META-INF</directory>
+				              <targetPath>META-INF</targetPath>
+				              <filtering>false</filtering>
+				            </resource>
+				          </webResources>
+				        </configuration>
+				      </plugin>
+				</plugins>
+			</build>
 		</profile>
 	</profiles>
 
@@ -378,13 +396,21 @@
 					</execution>
 					<execution>
 						<id>generate-code-coverage-report</id>
-						<phase>test</phase>
+						<phase>verify</phase>
 						<goals>
 							<goal>report</goal>
-						</goals>
+						</goals>				
+						<configuration>
+				        		<excludes>
+				          			<exclude>**/*Test*.class</exclude>
+				          			<exclude>**/*Tests.class</exclude>
+				          			<exclude>**/test/**</exclude>
+				        		</excludes>
+				      		</configuration>
 					</execution>
 				</executions>
 			</plugin>
+			
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
