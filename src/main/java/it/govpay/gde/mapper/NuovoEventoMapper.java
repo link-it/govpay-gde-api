@@ -35,8 +35,10 @@ public interface NuovoEventoMapper {
 	@Mapping(target = "idIncasso", source="idRiconciliazione")
 	@Mapping(target = "data", source="dataEvento")
 	@Mapping(target = "intervallo", source="durataEvento")
-	@Mapping(target = "parametriRichiesta", source="parametriRichiesta", qualifiedByName = "convertParametriRichiesta")
-	@Mapping(target = "parametriRisposta", source="parametriRisposta", qualifiedByName = "convertParametriRisposta")
+	@Mapping(target = "parametriRichiesta", expression = "java(nuovoEvento.getParametriRichiesta() != null ? convertParametriRichiesta(nuovoEvento.getParametriRichiesta()) : null)")
+	@Mapping(target = "parametriRisposta", expression = "java(nuovoEvento.getParametriRisposta() != null ? convertParametriRisposta(nuovoEvento.getParametriRisposta()) : null)")
+//	@Mapping(target = "parametriRichiesta", source="parametriRichiesta", qualifiedByName = "convertParametriRichiesta")
+//	@Mapping(target = "parametriRisposta", source="parametriRisposta", qualifiedByName = "convertParametriRisposta")
 	@Mapping(target = "datiPagoPA", source="datiPagoPA", qualifiedByName = "convertDatiPagoPA")
 	public EventoEntity nuovoEventoToEventoEntity(NuovoEvento nuovoEvento);
 	
@@ -106,7 +108,6 @@ public interface NuovoEventoMapper {
 	
 	@Named("convertParametriRichiesta")
 	public default byte[] convertParametriRichiesta(it.govpay.gde.beans.DettaglioRichiesta dettaglioRichiesta) {
-		if(dettaglioRichiesta == null) return null;
 		
 		DettaglioRichiesta dettaglioRichiestaEntity = nuovoEventoDettaglioRichiestaToEventoEntityDettaglioRichiesta(dettaglioRichiesta);
 		ObjectMapper objectMapper = JpaConverterObjectMapperFactory.jpaConverterObjectMapper();
@@ -119,7 +120,6 @@ public interface NuovoEventoMapper {
 	
 	@Named("convertParametriRisposta")
 	public default byte[] convertParametriRisposta(it.govpay.gde.beans.DettaglioRisposta dettaglioRisposta) {
-		if(dettaglioRisposta == null) return null;
 		
 		DettaglioRisposta dettaglioRispostaEntity = nuovoEventoDettaglioRispostaToEventoEntityDettaglioRisposta(dettaglioRisposta);
 		ObjectMapper objectMapper = JpaConverterObjectMapperFactory.jpaConverterObjectMapper();
