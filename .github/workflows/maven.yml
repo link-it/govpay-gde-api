@@ -28,6 +28,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Clona tutta la history Git 
     - name: Set timezone to Europe/Rome
       run: sudo timedatectl set-timezone Europe/Rome
     - name: Set up JDK 21
@@ -45,20 +47,31 @@ jobs:
         fi
       env:
         NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+    #  Cache .dependency-check/data
+    - name: Cache OWASP Dependency-Check DB
+      uses: actions/cache@v4
+      with:
+        path: .dependency-check/data
+        key: ${{ runner.os }}-owasp-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-owasp-
+          
     - name: Build War with Maven
       run: mvn clean install -P war -DskipTests -Ddependency-check.skip=true
     - name: Build Jar with Maven
-      run: mvn install -P jar -Dspring.profiles.active=test -Duser.timezone=Europe/Rome -DnvdApiKey=$NVD_API_KEY
+      run: mvn install -P jar -Dspring.profiles.active=test -Duser.timezone=Europe/Rome -DnvdApiKey=$NVD_API_KEY -DdataDirectory=.dependency-check/data -Dowasp.format=ALL -Dowasp.output.dir=./dependency-check-report
       env:
         NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
-    - name: List files in target directory
-      run: ls -l target/
-
-    - name: Show JaCoCo report location
+    - name: Show JaCoCo report location and Zip JaCoCo HTML report
       run: |
         ls -lh target/site/jacoco/
         file target/site/jacoco/jacoco.xml || echo "Report non trovato"
+        cd target/site
+        zip -r ../jacoco-html-report.zip jacoco
+        cd ../../
+        ls -lh target/  
     
     - name: Copy dependencies
       run: |
@@ -85,8 +98,12 @@ jobs:
       uses: actions/upload-artifact@v4.6.0
       with:
         name: govpay-gde-api
-        path: target/govpay-gde-api.*
-
+        path: |
+          target/govpay-gde-api.*
+          target/site/jacoco/jacoco.xml
+          target/jacoco-html-report.zip
+          target/dependency-check-report.html
+          target/dependency-check-report.xml
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     - name: Update dependency graph
       uses: advanced-security/maven-dependency-submission-action@v4.1.0
@@ -109,10 +126,10 @@ jobs:
         path: target/  # Assicurati che il file venga scaricato nella cartella target
 
     - name: Rename the artifact file to include the tag
-      run: cp target/govpay-gde-api.war target/govpay-gde-api-${{ github.ref_name }}.war  # Rinominare il file
-
-    - name: Rename the artifact file to include the tag
-      run: cp target/govpay-gde-api.jar target/govpay-gde-api-${{ github.ref_name }}.jar  # Rinominare il file
+      run: |
+        cp target/govpay-gde-api.war target/govpay-gde-api-${{ github.ref_name }}.war  # Rinominare il file war
+        cp target/govpay-gde-api.jar target/govpay-gde-api-${{ github.ref_name }}.jar  # Rinominare il file jar
+        cp target/site/jacoco/jacoco.xml target/jacoco.xml
 
     - name: List files in target directory
       run: ls -l target/
@@ -124,5 +141,9 @@ jobs:
         files: |
           target/govpay-gde-api-${{ github.ref_name }}.war 
           target/govpay-gde-api-${{ github.ref_name }}.jar
+          target/jacoco.xml
+          target/jacoco-html-report.zip
+          target/dependency-check-report.html
+          target/dependency-check-report.xml
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
