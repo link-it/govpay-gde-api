@@ -9,12 +9,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Lob;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -49,8 +46,6 @@ public class EventoEntity {
 	public enum EsitoEvento { OK, KO, FAIL }
 	
 	@Id
-	@SequenceGenerator(name="seq_eventi",sequenceName="seq_eventi", initialValue=1, allocationSize=1)
-	@GeneratedValue(strategy= GenerationType.SEQUENCE, generator="seq_eventi")
 	private Long id;
 	
 	@Column(name = "componente")

@@ -42,7 +42,18 @@ spring.mvc.servlet.path=[Basepath servizi]
 # Abilitazione Endpoint /actuator/health/liveness
 management.endpoints.web.base-path=[Basepath dove esporre i servizi di stato applicazione]
 
-# ------------ HIBERNATE & JPA -------------------
+# -------------- BUSINESS LOGIC PROPERTIES  ----------------
+
+gde.time-zone=[TimeZone dell'applicazione]
+
+```
+
+## Configurazione connessione al db
+
+Per la configurazione della connessione al db utilizzare le seguenti proprieta':
+
+``` bash
+
 
 # Configurazione DB
 spring.datasource.jndiName=[JNDI NAME del datasource]
@@ -53,13 +64,17 @@ spring.datasource.password=[PASSWORD DB]
 
 spring.jpa.database-platform=[DIALECT JPA]
 spring.jpa.properties.hibernate.dialect=[DIALECT JPA]
+spring.jpa.mapping-resources=META-INF/orm-[h2|hsql|mysql|oracle|postgres|sqlserver].xml
 
 spring.jpa.hibernate.ddl-auto=[Configura il comportamento di Hibernate nella generazione dello schema del database.]
 
-# -------------- BUSINESS LOGIC PROPERTIES  ----------------
-
-gde.time-zone=[TimeZone dell'applicazione]
+spring.datasource.hikari.connection-timeout=20000
+spring.datasource.hikari.minimum-idle=2
+spring.datasource.hikari.maximum-pool-size=5
+spring.datasource.hikari.idle-timeout=10000
+spring.datasource.hikari.max-lifetime=1000
 
 ```
+
 
 All'interno del file `log4j2.xml` si definisce la configurazione di log dell'applicazione.

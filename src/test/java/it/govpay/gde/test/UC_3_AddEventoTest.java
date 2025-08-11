@@ -558,7 +558,6 @@ class UC_3_AddEventoTest {
 		result = this.mockMvc.perform(get(Costanti.EVENTO_PATH,idEvento))
 				.andExpect(status().isOk())
 				.andReturn();
-		System.out.println("RES: "+result.getResponse().getContentAsString());
 		JsonReader reader = Json.createReader(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
 		JsonObject eventoDetail = reader.readObject();
 
