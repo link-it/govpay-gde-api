@@ -1,0 +1,68 @@
+FROM eclipse-temurin:21-jre-alpine
+
+ARG GOVPAY_GDE_VERSION=1.0.2
+
+LABEL maintainer="Link.it s.r.l."
+LABEL description="GovPay GDE (Giornale degli Eventi) REST API"
+LABEL govpay.gde.version="${GOVPAY_GDE_VERSION}"
+
+# Install dependencies (netcat for health checks)
+RUN apk add --no-cache \
+    bash \
+    curl \
+    netcat-openbsd \
+    tzdata
+
+# Set timezone
+ENV TZ=Europe/Rome
+
+# Create application user and directories
+RUN addgroup -S govpay && adduser -S -G govpay govpay && \
+    mkdir -p /opt/govpay-gde /var/log/govpay /opt/jdbc-drivers && \
+    chown -R govpay:govpay /opt/govpay-gde /var/log/govpay
+
+WORKDIR /opt/govpay-gde
+
+# Download GDE JAR from GitHub release
+RUN echo "Downloading GovPay GDE ${GOVPAY_GDE_VERSION} JAR..." && \
+    curl -L -o /opt/govpay-gde/govpay-gde-api.jar \
+    "https://github.com/link-it/govpay-gde-api/releases/download/${GOVPAY_GDE_VERSION}/govpay-gde-api-${GOVPAY_GDE_VERSION}.jar" && \
+    echo "GDE JAR downloaded successfully"
+
+# Copy entrypoint script
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh && \
+    chown govpay:govpay /usr/local/bin/entrypoint.sh
+
+# Set hardcoded environment variables (static configuration)
+ENV GDE_TIME_ZONE=Europe/Rome \
+    SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=20000 \
+    SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT=10000 \
+    SPRING_DATASOURCE_HIKARI_MAX_LIFETIME=600000 \
+    LOGGING_FILE_NAME=/var/log/govpay/govpay-gde-api.log \
+    LOGGING_DIRECTORYPATH=/var/log/govpay \
+    LOGGING_FILEPREFIX=govpay-gde-api
+
+# Runtime environment variables (govpay-docker compatible naming)
+# Database configuration (required):
+# - GOVPAY_DB_TYPE (postgresql, mysql, mariadb, oracle)
+# - GOVPAY_DB_SERVER (host:port)
+# - GOVPAY_DB_NAME
+# - GOVPAY_DB_USER
+# - GOVPAY_DB_PASSWORD
+# - GOVPAY_DS_JDBC_LIBS (default: /opt/jdbc-drivers)
+#
+# GDE-specific pool configuration (optional):
+# - GOVPAY_GDE_MIN_POOL (default: 2)
+# - GOVPAY_GDE_MAX_POOL (default: 5)
+#
+# Server configuration:
+# - SERVER_PORT (default: 8080)
+
+USER govpay
+
+VOLUME ["/var/log/govpay"]
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+CMD ["start"]

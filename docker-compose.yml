@@ -1,0 +1,143 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  # Comment/uncomment database sections based on your choice
+  postgres:
+    image: postgres:15-alpine
+    container_name: govpay-gde-postgres
+    environment:
+      POSTGRES_DB: ${GOVPAY_DB_NAME:-govpay}
+      POSTGRES_USER: ${GOVPAY_DB_USER:-govpay}
+      POSTGRES_PASSWORD: ${GOVPAY_DB_PASSWORD:?Database password required}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=it_IT.UTF-8 --lc-ctype=it_IT.UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - govpay-gde-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${GOVPAY_DB_USER:-govpay}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # MySQL/MariaDB Database (alternative to PostgreSQL)
+  # Uncomment to use MySQL instead of PostgreSQL
+  # mysql:
+  #   image: mariadb:11
+  #   container_name: govpay-gde-mysql
+  #   environment:
+  #     MYSQL_DATABASE: ${GOVPAY_DB_NAME:-govpay}
+  #     MYSQL_USER: ${GOVPAY_DB_USER:-govpay}
+  #     MYSQL_PASSWORD: ${GOVPAY_DB_PASSWORD:?Database password required}
+  #     MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Root password required}
+  #     MYSQL_CHARSET: utf8mb4
+  #     MYSQL_COLLATION: utf8mb4_unicode_ci
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   networks:
+  #     - govpay-gde-network
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${GOVPAY_DB_USER:-govpay}", "-p${GOVPAY_DB_PASSWORD}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   restart: unless-stopped
+
+  # Oracle Database (alternative to PostgreSQL)
+  # Uncomment to use Oracle instead of PostgreSQL
+  # Note: Requires Oracle Database image (not included in Docker Hub)
+  # oracle:
+  #   image: container-registry.oracle.com/database/express:21.3.0-xe
+  #   container_name: govpay-gde-oracle
+  #   environment:
+  #     ORACLE_PWD: ${GOVPAY_DB_PASSWORD:?Database password required}
+  #     ORACLE_CHARACTERSET: AL32UTF8
+  #   volumes:
+  #     - oracle_data:/opt/oracle/oradata
+  #   networks:
+  #     - govpay-gde-network
+  #   healthcheck:
+  #     test: ["CMD", "sqlplus", "-L", "system/${GOVPAY_DB_PASSWORD}@localhost:1521/XE", "@/dev/null"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #   restart: unless-stopped
+
+  # GovPay GDE API Service
+  govpay-gde-api:
+    image: ${GOVPAY_GDE_IMAGE:-linkitaly/govpay-gde:1.0.2}
+    container_name: govpay-gde-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      # Change dependency based on database choice:
+      # mysql:
+      #   condition: service_healthy
+      # oracle:
+      #   condition: service_healthy
+    environment:
+      # Database configuration (govpay-docker compatible)
+      GOVPAY_DB_TYPE: ${GOVPAY_DB_TYPE:-postgresql}
+      GOVPAY_DB_SERVER: ${GOVPAY_DB_SERVER:-postgres:5432}
+      GOVPAY_DB_NAME: ${GOVPAY_DB_NAME:-govpay}
+      GOVPAY_DB_USER: ${GOVPAY_DB_USER:-govpay}
+      GOVPAY_DB_PASSWORD: ${GOVPAY_DB_PASSWORD:?Database password required}
+      GOVPAY_DS_CONN_PARAM: ${GOVPAY_DS_CONN_PARAM:-}
+      GOVPAY_ORACLE_JDBC_URL_TYPE: ${GOVPAY_ORACLE_JDBC_URL_TYPE:-servicename}
+
+      # Connection pool configuration (GDE-specific namespace)
+      GOVPAY_GDE_MIN_POOL: ${GOVPAY_GDE_MIN_POOL:-2}
+      GOVPAY_GDE_MAX_POOL: ${GOVPAY_GDE_MAX_POOL:-5}
+
+      # Server configuration
+      SERVER_PORT: ${SERVER_PORT:-8080}
+
+      # Optional: Oracle TNS configuration
+      # ORACLE_TNS_ADMIN: /etc/govpay
+
+      # Java memory settings
+      JAVA_MIN_HEAP: ${JAVA_MIN_HEAP:-256m}
+      JAVA_MAX_HEAP: ${JAVA_MAX_HEAP:-512m}
+
+      # Debug mode
+      DEBUG: ${DEBUG:-false}
+
+    volumes:
+      - govpay-gde-logs:/var/log/govpay
+      # JDBC drivers (REQUIRED - mount external driver directory)
+      - ./jdbc-drivers:/opt/jdbc-drivers:ro
+      # Optional: Oracle TNS configuration
+      # - ./tnsnames.ora:/etc/govpay/tnsnames.ora:ro
+
+    networks:
+      - govpay-gde-network
+
+    # Expose REST API port
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+
+    # Health check via HTTP endpoint
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    restart: unless-stopped
+
+networks:
+  govpay-gde-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  # mysql_data:
+  #   driver: local
+  # oracle_data:
+  #   driver: local
+  govpay-gde-logs:
+    driver: local
