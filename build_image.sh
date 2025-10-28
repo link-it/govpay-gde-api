@@ -1,38 +1,39 @@
 #!/bin/bash
 
 ##############################################################################
-# GovPay GDE API Docker Image Build Script
+# Script di Build Immagine Docker GovPay GDE API
 #
-# Build a Docker image for GovPay GDE (Giornale degli Eventi) REST API.
-# JDBC drivers are NOT included in the image and must be provided at runtime.
+# Costruisce un'immagine Docker per l'API REST GovPay GDE (Giornale degli
+# Eventi). I driver JDBC NON sono inclusi nell'immagine e devono essere
+# forniti a runtime.
 #
-# Usage: ./build_image.sh [options]
+# Uso: ./build_image.sh [opzioni]
 #
-# Options:
-#   -v VERSION    GovPay GDE version (default: 1.0.2)
-#   -t TAG        Additional tag for the image (optional)
-#   -h            Show this help message
+# Opzioni:
+#   -v VERSION    Versione GovPay GDE (default: 1.0.2)
+#   -t TAG        Tag aggiuntivo per l'immagine (opzionale)
+#   -h            Mostra questo messaggio di aiuto
 #
-# Examples:
-#   ./build_image.sh                      # Build with defaults
-#   ./build_image.sh -v 1.0.2            # Specify version
-#   ./build_image.sh -t latest           # Add custom tag
+# Esempi:
+#   ./build_image.sh                      # Build con valori di default
+#   ./build_image.sh -v 1.0.2            # Specifica versione
+#   ./build_image.sh -t latest           # Aggiungi tag personalizzato
 ##############################################################################
 
 set -e
 
-# Default values
+# Valori di default
 GOVPAY_GDE_VERSION="1.0.2"
 IMAGE_NAME="linkitaly/govpay-gde"
 ADDITIONAL_TAG=""
 
-# Color output
+# Output colorato
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m' # Nessun colore
 
-# Function to print colored messages
+# Funzione per stampare messaggi colorati
 print_info() {
     echo -e "${GREEN}[INFO]${NC} $1"
 }
@@ -45,13 +46,13 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Function to show usage
+# Funzione per mostrare l'uso
 show_usage() {
     grep '^#' "$0" | grep -v '#!/bin/bash' | sed 's/^# \?//'
     exit 0
 }
 
-# Parse command line arguments
+# Parsing argomenti da linea di comando
 while getopts "v:t:h" opt; do
     case ${opt} in
         v)
@@ -64,25 +65,25 @@ while getopts "v:t:h" opt; do
             show_usage
             ;;
         \?)
-            print_error "Invalid option: -$OPTARG"
+            print_error "Opzione non valida: -$OPTARG"
             show_usage
             ;;
     esac
 done
 
-# Check if Dockerfile exists
+# Verifica esistenza Dockerfile
 if [ ! -f "Dockerfile.github" ]; then
-    print_error "Dockerfile.github not found in current directory"
+    print_error "Dockerfile.github non trovato nella directory corrente"
     exit 1
 fi
 
-# Check if entrypoint.sh exists
+# Verifica esistenza entrypoint.sh
 if [ ! -f "entrypoint.sh" ]; then
-    print_error "entrypoint.sh not found in current directory"
+    print_error "entrypoint.sh non trovato nella directory corrente"
     exit 1
 fi
 
-# Build image tags (no database suffix - drivers are external)
+# Costruzione tag immagine (senza suffisso database - driver esterni)
 MAIN_TAG="${IMAGE_NAME}:${GOVPAY_GDE_VERSION}"
 TAGS="-t ${MAIN_TAG}"
 
@@ -90,44 +91,44 @@ if [ -n "${ADDITIONAL_TAG}" ]; then
     TAGS="${TAGS} -t ${IMAGE_NAME}:${ADDITIONAL_TAG}"
 fi
 
-# Print build information
+# Stampa informazioni di build
 print_info "====================================="
-print_info "GovPay GDE API Docker Build"
+print_info "Build Docker GovPay GDE API"
 print_info "====================================="
-print_info "GDE Version:  ${GOVPAY_GDE_VERSION}"
-print_info "Image tags:   ${MAIN_TAG}"
+print_info "Versione GDE:  ${GOVPAY_GDE_VERSION}"
+print_info "Tag immagine:  ${MAIN_TAG}"
 if [ -n "${ADDITIONAL_TAG}" ]; then
-    print_info "              ${IMAGE_NAME}:${ADDITIONAL_TAG}"
+    print_info "               ${IMAGE_NAME}:${ADDITIONAL_TAG}"
 fi
 print_info "====================================="
 
-# Build the image
-print_info "Building Docker image..."
+# Build dell'immagine
+print_info "Costruzione immagine Docker..."
 docker build \
     -f Dockerfile.github \
     --build-arg GOVPAY_GDE_VERSION="${GOVPAY_GDE_VERSION}" \
     ${TAGS} \
     .
 
-# Check build result
+# Verifica risultato build
 if [ $? -eq 0 ]; then
     print_info "====================================="
-    print_info "${GREEN}Build completed successfully!${NC}"
+    print_info "${GREEN}Build completata con successo!${NC}"
     print_info "====================================="
-    print_info "Image: ${MAIN_TAG}"
+    print_info "Immagine: ${MAIN_TAG}"
     if [ -n "${ADDITIONAL_TAG}" ]; then
-        print_info "       ${IMAGE_NAME}:${ADDITIONAL_TAG}"
+        print_info "          ${IMAGE_NAME}:${ADDITIONAL_TAG}"
     fi
     print_info ""
-    print_info "IMPORTANT: JDBC drivers must be provided at runtime!"
-    print_info "Place JDBC driver JAR files in ./jdbc-drivers/ directory"
+    print_info "IMPORTANTE: I driver JDBC devono essere forniti a runtime!"
+    print_info "Posizionare i file JAR dei driver JDBC nella directory ./jdbc-drivers/"
     print_info ""
-    print_info "To run the container:"
-    print_info "  1. Copy .env.template to .env and configure"
-    print_info "  2. Place JDBC drivers in ./jdbc-drivers/"
+    print_info "Per eseguire il container:"
+    print_info "  1. Copiare .env.template in .env e configurare"
+    print_info "  2. Posizionare i driver JDBC in ./jdbc-drivers/"
     print_info "  3. docker-compose up -d"
     print_info ""
-    print_info "Or manually:"
+    print_info "Oppure manualmente:"
     print_info "  docker run -d \\"
     print_info "    -e GOVPAY_DB_TYPE=postgresql \\"
     print_info "    -e GOVPAY_DB_SERVER=postgres:5432 \\"
@@ -136,10 +137,10 @@ if [ $? -eq 0 ]; then
     print_info "    -e GOVPAY_DB_PASSWORD=<password> \\"
     print_info "    -v \$(pwd)/jdbc-drivers:/opt/jdbc-drivers:ro \\"
     print_info "    -v govpay-gde-logs:/var/log/govpay \\"
-    print_info "    -p 8080:8080 \\"
+    print_info "    -p 10002:10002 \\"
     print_info "    ${MAIN_TAG}"
     print_info "====================================="
 else
-    print_error "Build failed!"
+    print_error "Build fallita!"
     exit 1
 fi

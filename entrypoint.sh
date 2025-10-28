@@ -1,44 +1,49 @@
 #!/bin/bash
 
 ##############################################################################
-# GovPay GDE (Giornale degli Eventi) API Entrypoint Script
+# GovPay GDE (Giornale degli Eventi) API - Script di Entrypoint
 #
-# Supports both legacy and govpay-docker compatible variable naming
+# Supporta nomenclatura variabili legacy e govpay-docker
 ##############################################################################
 
 set -e
 
-# Logging functions
+# Debug di esecuzione (come govpay-docker)
+exec 6<> /tmp/entrypoint_debug.log
+exec 2>&6
+set -x
+
+# Funzioni di logging
 log_info() { echo -e "\033[0;32m[INFO]\033[0m $(date '+%Y-%m-%d %H:%M:%S') - $1"; }
 log_warn() { echo -e "\033[1;33m[WARN]\033[0m $(date '+%Y-%m-%d %H:%M:%S') - $1"; }
 log_error() { echo -e "\033[0;31m[ERROR]\033[0m $(date '+%Y-%m-%d %H:%M:%S') - $1"; }
 
 log_info "========================================"
-log_info "GovPay GDE API Service Starting"
+log_info "Avvio Servizio GovPay GDE API"
 log_info "========================================"
 
 ##############################################################################
-# Support for govpay-docker style variables
+# Supporto variabili stile govpay-docker
 ##############################################################################
 
-# Set defaults
+# Imposta valori di default
 GOVPAY_DS_JDBC_LIBS=${GOVPAY_DS_JDBC_LIBS:-/opt/jdbc-drivers}
 GOVPAY_GDE_MIN_POOL=${GOVPAY_GDE_MIN_POOL:-2}
 GOVPAY_GDE_MAX_POOL=${GOVPAY_GDE_MAX_POOL:-5}
 
-# If GOVPAY_DB_TYPE is set, use new variable style
+# Se GOVPAY_DB_TYPE è impostato, usa nomenclatura nuova
 if [ -n "${GOVPAY_DB_TYPE}" ]; then
-    log_info "Using govpay-docker compatible variables"
+    log_info "Utilizzo variabili compatibili govpay-docker"
 
-    # Validate required govpay-docker variables
+    # Validazione variabili obbligatorie govpay-docker
     if [ -z "${GOVPAY_DB_SERVER}" ] || [ -z "${GOVPAY_DB_NAME}" ] || \
        [ -z "${GOVPAY_DB_USER}" ] || [ -z "${GOVPAY_DB_PASSWORD}" ]; then
-        log_error "Missing required GOVPAY_DB_* variables"
-        log_error "Required: GOVPAY_DB_TYPE, GOVPAY_DB_SERVER, GOVPAY_DB_NAME, GOVPAY_DB_USER, GOVPAY_DB_PASSWORD"
+        log_error "Variabili GOVPAY_DB_* obbligatorie mancanti"
+        log_error "Richieste: GOVPAY_DB_TYPE, GOVPAY_DB_SERVER, GOVPAY_DB_NAME, GOVPAY_DB_USER, GOVPAY_DB_PASSWORD"
         exit 1
     fi
 
-    # Extract host and port
+    # Estrazione host e porta
     IFS=':' read -r DB_HOST DB_PORT <<< "${GOVPAY_DB_SERVER}"
     [ -z "${DB_PORT}" ] && case "${GOVPAY_DB_TYPE}" in
         postgresql) DB_PORT=5432 ;;
@@ -46,7 +51,7 @@ if [ -n "${GOVPAY_DB_TYPE}" ]; then
         oracle) DB_PORT=1521 ;;
     esac
 
-    # Build JDBC URL
+    # Costruzione URL JDBC
     case "${GOVPAY_DB_TYPE}" in
         postgresql)
             SPRING_DATASOURCE_URL="jdbc:postgresql://${DB_HOST}:${DB_PORT}/${GOVPAY_DB_NAME}"
@@ -72,15 +77,15 @@ if [ -n "${GOVPAY_DB_TYPE}" ]; then
             [ -n "${ORACLE_TNS_ADMIN}" ] && JAVA_OPTS="${JAVA_OPTS} -Doracle.net.tns_admin=${ORACLE_TNS_ADMIN}"
             ;;
         *)
-            log_error "Unsupported GOVPAY_DB_TYPE: ${GOVPAY_DB_TYPE}"
+            log_error "GOVPAY_DB_TYPE non supportato: ${GOVPAY_DB_TYPE}"
             exit 1
             ;;
     esac
 
-    # Add connection params
+    # Aggiunta parametri di connessione
     [ -n "${GOVPAY_DS_CONN_PARAM}" ] && SPRING_DATASOURCE_URL="${SPRING_DATASOURCE_URL}?${GOVPAY_DS_CONN_PARAM}"
 
-    # Map to Spring variables
+    # Mappatura a variabili Spring
     SPRING_DATASOURCE_USERNAME="${GOVPAY_DB_USER}"
     SPRING_DATASOURCE_PASSWORD="${GOVPAY_DB_PASSWORD}"
     SPRING_DATASOURCE_DRIVER_CLASS_NAME="${GOVPAY_DS_DRIVER_CLASS}"
@@ -94,65 +99,70 @@ if [ -n "${GOVPAY_DB_TYPE}" ]; then
     export SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT SPRING_JPA_MAPPING_RESOURCES
     export SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE
 
-    log_info "Database: ${GOVPAY_DB_TYPE} at ${GOVPAY_DB_SERVER}/${GOVPAY_DB_NAME}"
+    log_info "Database: ${GOVPAY_DB_TYPE} su ${GOVPAY_DB_SERVER}/${GOVPAY_DB_NAME}"
 else
-    # Legacy variable style
-    log_warn "Using legacy SPRING_DATASOURCE_* variables"
-    log_warn "Consider migrating to GOVPAY_DB_* variables for consistency with govpay-docker"
+    # Nomenclatura variabili legacy
+    log_warn "Utilizzo variabili legacy SPRING_DATASOURCE_*"
+    log_warn "Si consiglia di migrare a variabili GOVPAY_DB_* per coerenza con govpay-docker"
 
     if [ -z "${SPRING_DATASOURCE_URL}" ] || [ -z "${SPRING_DATASOURCE_USERNAME}" ] || \
        [ -z "${SPRING_DATASOURCE_PASSWORD}" ]; then
-        log_error "Missing required SPRING_DATASOURCE_* variables"
+        log_error "Variabili SPRING_DATASOURCE_* obbligatorie mancanti"
         exit 1
     fi
 fi
 
 ##############################################################################
-# Configure server port
+# Configurazione porta server
 ##############################################################################
 
 if [ -z "${SERVER_PORT}" ]; then
-    SERVER_PORT="8080"
+    SERVER_PORT="10002"
     export SERVER_PORT
 fi
 
 ##############################################################################
-# Configure Java options
+# Configurazione Memoria JVM (Percentuale RAM)
 ##############################################################################
 
 JAVA_OPTS="${JAVA_OPTS:-}"
+DEFAULT_MAX_RAM_PERCENTAGE=80
 
-# Memory settings
-JAVA_MIN_HEAP=${JAVA_MIN_HEAP:-256m}
-JAVA_MAX_HEAP=${JAVA_MAX_HEAP:-512m}
-JAVA_OPTS="${JAVA_OPTS} -Xms${JAVA_MIN_HEAP} -Xmx${JAVA_MAX_HEAP}"
+JVM_MEMORY_OPTS="-XX:MaxRAMPercentage=${GOVPAY_GDE_JVM_MAX_RAM_PERCENTAGE:-${DEFAULT_MAX_RAM_PERCENTAGE}}"
+[ -n "${GOVPAY_GDE_JVM_INITIAL_RAM_PERCENTAGE}" ] && JVM_MEMORY_OPTS="$JVM_MEMORY_OPTS -XX:InitialRAMPercentage=${GOVPAY_GDE_JVM_INITIAL_RAM_PERCENTAGE}"
+[ -n "${GOVPAY_GDE_JVM_MIN_RAM_PERCENTAGE}" ] && JVM_MEMORY_OPTS="$JVM_MEMORY_OPTS -XX:MinRAMPercentage=${GOVPAY_GDE_JVM_MIN_RAM_PERCENTAGE}"
+[ -n "${GOVPAY_GDE_JVM_MAX_METASPACE_SIZE}" ] && JVM_MEMORY_OPTS="$JVM_MEMORY_OPTS -XX:MaxMetaspaceSize=${GOVPAY_GDE_JVM_MAX_METASPACE_SIZE}"
+[ -n "${GOVPAY_GDE_JVM_MAX_DIRECT_MEMORY_SIZE}" ] && JVM_MEMORY_OPTS="$JVM_MEMORY_OPTS -XX:MaxDirectMemorySize=${GOVPAY_GDE_JVM_MAX_DIRECT_MEMORY_SIZE}"
+
+JAVA_OPTS="${JAVA_OPTS} ${JVM_MEMORY_OPTS}"
+export JAVA_OPTS
 
 ##############################################################################
-# Configuration Summary
+# Riepilogo Configurazione
 ##############################################################################
 
 log_info "========================================"
-log_info "Configuration Summary"
+log_info "Riepilogo Configurazione"
 log_info "========================================"
 log_info "Database: ${SPRING_DATASOURCE_URL}"
 log_info "Pool: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE}/${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE}"
-log_info "ORM Mapping: ${SPRING_JPA_MAPPING_RESOURCES}"
-log_info "Server Port: ${SERVER_PORT}"
-log_info "Java: ${JAVA_MIN_HEAP} - ${JAVA_MAX_HEAP}"
+log_info "Mapping ORM: ${SPRING_JPA_MAPPING_RESOURCES}"
+log_info "Porta Server: ${SERVER_PORT}"
+log_info "Java: MaxRAMPercentage=${GOVPAY_GDE_JVM_MAX_RAM_PERCENTAGE:-${DEFAULT_MAX_RAM_PERCENTAGE}}%"
 log_info "========================================"
 
 ##############################################################################
-# Start Application
+# Avvio Applicazione
 ##############################################################################
 
 JAR_FILE=$(find /opt/govpay-gde -name "*.jar" -type f | head -n 1)
 
 if [ -z "${JAR_FILE}" ]; then
-    log_error "No JAR file found in /opt/govpay-gde"
+    log_error "Nessun file JAR trovato in /opt/govpay-gde"
     exit 1
 fi
 
-log_info "Starting: ${JAR_FILE}"
+log_info "Avvio: ${JAR_FILE}"
 log_info "========================================"
 
 exec java ${JAVA_OPTS} -jar "${JAR_FILE}"
