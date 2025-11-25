@@ -1,59 +1,63 @@
-# GovPay GDE (Giornale degli Eventi) API - Docker Setup
+# GovPay GDE (Giornale degli Eventi) API - Configurazione Docker
 
-Docker containerization for GovPay GDE REST API service that provides event logging and journal access for GovPay applications.
+Containerizzazione Docker per il servizio REST API GovPay GDE che fornisce registrazione degli eventi e accesso al giornale per le applicazioni GovPay.
 
-## Overview
+## Panoramica
 
-This Docker setup provides:
-- Multi-database support (PostgreSQL, MySQL/MariaDB, Oracle)
-- Lightweight REST API service
-- Health checks and monitoring
-- Configurable connection pooling
-- ORM mapping for different database vendors
-- Integration-ready for GovPay A.C.A. and other services
+Questa configurazione Docker fornisce:
+- Supporto multi-database (PostgreSQL, MySQL/MariaDB, Oracle)
+- Servizio REST API leggero
+- Controlli di salute e monitoraggio
+- Connection pooling configurabile
+- Mappatura ORM per diversi database
+- Integrazione pronta per GovPay A.C.A. e altri servizi
 
-## Quick Start
+## Avvio Rapido
 
-### 1. Build the Docker Image
+### 1. Costruire l'Immagine Docker
 
 ```bash
-# Build with PostgreSQL support (default)
+# Build con supporto PostgreSQL (predefinito)
 ./build_image.sh
 
-# Build with specific database
+# Build con database specifico
 ./build_image.sh -v 3.8.0 -d postgresql
 ./build_image.sh -v 3.8.0 -d mysql
 ./build_image.sh -v 3.8.0 -d oracle
 ```
 
-### 2. Configure Environment
+### 2. Configurare l'Ambiente
 
 ```bash
-# Copy the template and edit
+# Copiare il template e modificarlo
 cp .env.template .env
 nano .env
 ```
 
-**Required configuration:**
-- `DB_PASSWORD`: Database password
+**Configurazione richiesta:**
+- `GOVPAY_DB_TYPE`: Tipo di database (postgresql, mysql, mariadb, oracle)
+- `GOVPAY_DB_SERVER`: Server del database (formato: host:porta)
+- `GOVPAY_DB_NAME`: Nome del database
+- `GOVPAY_DB_USER`: Username del database
+- `GOVPAY_DB_PASSWORD`: Password del database
 
-### 3. Start the Services
+### 3. Avviare i Servizi
 
 ```bash
-# Start with docker-compose
+# Avviare con docker-compose
 docker-compose up -d
 
-# View logs
+# Visualizzare i log
 docker-compose logs -f govpay-gde-api
 
-# Check status
+# Verificare lo stato
 docker-compose ps
 
-# Test API
-curl http://localhost:8080/actuator/health
+# Testare l'API
+curl http://localhost:10002/actuator/health
 ```
 
-## Architecture
+## Architettura
 
 ```
 ┌─────────────────────────────────────┐
@@ -81,72 +85,66 @@ curl http://localhost:8080/actuator/health
       └───────────────────────┘
 ```
 
-## Database Configuration
+## Configurazione Database
 
-### PostgreSQL (Default)
+### PostgreSQL (Predefinito)
 
 ```env
-DB_JDBC_URL=jdbc:postgresql://postgres:5432/govpay
-DB_DRIVER=org.postgresql.Driver
-DB_HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
-DB_ORM_MAPPING=META-INF/orm-postgres.xml
+GOVPAY_DB_TYPE=postgresql
+GOVPAY_DB_SERVER=postgres:5432
+GOVPAY_DB_NAME=govpay
+GOVPAY_DB_USER=govpay
+GOVPAY_DB_PASSWORD=password_sicura
 ```
 
 ### MySQL/MariaDB
 
 ```env
-DB_JDBC_URL=jdbc:mysql://mysql:3306/govpay?zeroDateTimeBehavior=convertToNull
-DB_DRIVER=com.mysql.cj.jdbc.Driver
-DB_HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect
-DB_ORM_MAPPING=META-INF/orm-mysql.xml
+GOVPAY_DB_TYPE=mysql
+GOVPAY_DB_SERVER=mysql:3306
+GOVPAY_DB_NAME=govpay
+GOVPAY_DB_USER=govpay
+GOVPAY_DB_PASSWORD=password_sicura
+GOVPAY_DS_CONN_PARAM=zeroDateTimeBehavior=convertToNull
 ```
 
-Edit `docker-compose.yml` to uncomment the MySQL service.
+Modificare `docker-compose.yml` per decommentare il servizio MySQL.
 
 ### Oracle
 
 ```env
-DB_JDBC_URL=jdbc:oracle:thin:@//oracle:1521/XE
-DB_DRIVER=oracle.jdbc.OracleDriver
-DB_HIBERNATE_DIALECT=org.hibernate.dialect.OracleDialect
-DB_ORM_MAPPING=META-INF/orm-oracle.xml
+GOVPAY_DB_TYPE=oracle
+GOVPAY_DB_SERVER=oracle:1521
+GOVPAY_DB_NAME=XE
+GOVPAY_DB_USER=govpay
+GOVPAY_DB_PASSWORD=password_sicura
+GOVPAY_ORACLE_JDBC_URL_TYPE=servicename  # oppure 'sid'
 ```
 
-For TNS Names:
-```env
-DB_JDBC_URL=jdbc:oracle:thin:@TNSNAME
-ORACLE_TNS_ADMIN=/etc/govpay
-```
 
-Mount `tnsnames.ora`:
-```yaml
-volumes:
-  - ./tnsnames.ora:/etc/govpay/tnsnames.ora:ro
-```
+## Integrazione con GovPay A.C.A.
 
-## Integration with GovPay A.C.A.
+Per utilizzare GDE con il processore batch A.C.A.:
 
-To use GDE with the A.C.A. batch processor:
+### 1. Condividere il Database
 
-### 1. Share the Database
-
-Both services can use the same database:
+Entrambi i servizi possono utilizzare lo stesso database:
 
 ```yaml
-# In docker-compose.yml for both services
+# In docker-compose.yml per entrambi i servizi
 networks:
   - govpay-network
 ```
 
-### 2. Configure A.C.A. to Use GDE
+### 2. Configurare A.C.A. per Utilizzare GDE
 
-In A.C.A.'s `.env` file:
+Nel file `.env` di A.C.A.:
 ```env
 GDE_ENABLED=true
-GDE_BASE_URL=http://govpay-gde-api:8080
+GDE_BASE_URL=http://govpay-gde-api:10002
 ```
 
-### 3. Combined docker-compose.yml Example
+### 3. Esempio di docker-compose.yml Combinato
 
 ```yaml
 version: '3.8'
@@ -169,248 +167,111 @@ services:
       - govpay-gde-api
     environment:
       IT_GOVPAY_GDE_ENABLED: "true"
-      IT_GOVPAY_GDE_CLIENT_BASEURL: "http://govpay-gde-api:8080"
+      IT_GOVPAY_GDE_CLIENT_BASEURL: "http://govpay-gde-api:10002"
     # ... ACA config
 
 networks:
   govpay-network:
 ```
 
-## Configuration Reference
+## Riferimento Configurazione
 
-### Environment Variables
+### Variabili d'Ambiente
 
-| Variable | Required | Default | Description |
+| Variabile | Richiesta | Predefinito | Descrizione |
 |----------|----------|---------|-------------|
-| `SPRING_DATASOURCE_URL` | Yes | - | JDBC connection URL |
-| `SPRING_DATASOURCE_USERNAME` | Yes | - | Database username |
-| `SPRING_DATASOURCE_PASSWORD` | Yes | - | Database password |
-| `SPRING_JPA_MAPPING_RESOURCES` | No | auto-detected | ORM mapping file |
-| `SERVER_PORT` | No | `8080` | API listening port |
-| `DB_POOL_MIN_IDLE` | No | `2` | Min idle connections |
-| `DB_POOL_MAX_SIZE` | No | `5` | Max pool size |
-| `JAVA_MIN_HEAP` | No | `256m` | Min heap size |
-| `JAVA_MAX_HEAP` | No | `512m` | Max heap size |
-| `DEBUG` | No | `false` | Enable debug logging |
+| `GOVPAY_DB_TYPE` | Sì | - | Tipo di database (postgresql, mysql, mariadb, oracle) |
+| `GOVPAY_DB_SERVER` | Sì | - | Server database (formato: host:porta) |
+| `GOVPAY_DB_NAME` | Sì | - | Nome del database |
+| `GOVPAY_DB_USER` | Sì | - | Username del database |
+| `GOVPAY_DB_PASSWORD` | Sì | - | Password del database |
+| `GOVPAY_DS_CONN_PARAM` | No | - | Parametri aggiuntivi connessione JDBC |
+| `GOVPAY_DS_JDBC_LIBS` | No | `/opt/jdbc-drivers` | Percorso driver JDBC |
+| `SERVER_PORT` | No | `10002` | Porta di ascolto API |
+| `GOVPAY_GDE_MIN_POOL` | No | `2` | Connessioni idle minime |
+| `GOVPAY_GDE_MAX_POOL` | No | `5` | Dimensione massima pool |
+| `GOVPAY_GDE_JVM_MAX_RAM_PERCENTAGE` | No | `80` | Percentuale massima RAM per JVM |
+| `GOVPAY_GDE_JVM_INITIAL_RAM_PERCENTAGE` | No | - | Percentuale iniziale RAM per JVM |
+| `GOVPAY_GDE_JVM_MIN_RAM_PERCENTAGE` | No | - | Percentuale minima RAM per JVM |
+| `GOVPAY_GDE_JVM_MAX_METASPACE_SIZE` | No | - | Dimensione massima Metaspace |
+| `GOVPAY_GDE_JVM_MAX_DIRECT_MEMORY_SIZE` | No | - | Dimensione massima memoria diretta |
+| `GOVPAY_ORACLE_JDBC_URL_TYPE` | No | `servicename` | Tipo URL Oracle (servicename o sid) |
+| `JAVA_OPTS` | No | - | Opzioni aggiuntive JVM |
 
-### Hardcoded Settings
+### Impostazioni Predefinite
 
-These are baked into the Docker image:
+Queste sono incorporate nell'immagine Docker:
 - Timezone: `Europe/Rome`
-- Connection timeout: `20000ms`
-- Idle timeout: `10000ms`
-- Log file: `/var/log/govpay/govpay-gde-api.log`
+- Timeout connessione: `20000ms`
+- Timeout idle: `10000ms`
+- File di log: `/var/log/govpay/govpay-gde-api.log`
 
-### ORM Mapping Files
+### File di Mappatura ORM
 
-The service automatically selects the correct ORM mapping based on database type:
+Il servizio seleziona automaticamente la mappatura ORM corretta in base al tipo di database:
 - **PostgreSQL**: `META-INF/orm-postgres.xml`
 - **MySQL/MariaDB**: `META-INF/orm-mysql.xml`
 - **Oracle**: `META-INF/orm-oracle.xml`
 
-## API Endpoints
+## Endpoint API
 
-Once running, the following endpoints are available:
-
-### Health Check
-```bash
-curl http://localhost:8080/actuator/health
-```
-
-### Metrics
-```bash
-curl http://localhost:8080/actuator/metrics
-```
-
-### Info
-```bash
-curl http://localhost:8080/actuator/info
-```
-
-## Monitoring
+Una volta avviato, sono disponibili i seguenti endpoint:
 
 ### Health Check
-
-Docker Compose includes health checks:
-
 ```bash
-# Check service health
-docker-compose ps
-
-# View health check logs
-docker inspect govpay-gde-api | jq '.[0].State.Health'
+curl http://localhost:10002/actuator/health
 ```
 
-### Logs
-
+### Metriche
 ```bash
-# Follow logs
-docker-compose logs -f govpay-gde-api
-
-# Inside container
-docker exec -it govpay-gde-api tail -f /var/log/govpay/govpay-gde-api.log
+curl http://localhost:10002/actuator/metrics
 ```
 
-### Resource Usage
-
+### Informazioni
 ```bash
-# Monitor container resources
-docker stats govpay-gde-api
+curl http://localhost:10002/actuator/info
 ```
 
-## Troubleshooting
-
-### Database Connection Issues
-
-```bash
-# Check database is reachable
-docker-compose exec govpay-gde-api ping postgres
-
-# Verify credentials
-docker-compose exec postgres psql -U govpay -d govpay -c "SELECT 1"
-
-# Check JDBC URL format
-docker-compose exec govpay-gde-api env | grep DATASOURCE
-```
-
-### ORM Mapping Issues
-
-```bash
-# Verify ORM mapping file is set correctly
-docker-compose exec govpay-gde-api env | grep MAPPING
-
-# Check logs for JPA errors
-docker-compose logs govpay-gde-api | grep -i "jpa\|hibernate\|orm"
-```
-
-### Port Conflicts
-
-If port 8080 is already in use:
-
-```env
-# In .env file
-SERVER_PORT=8081
-```
-
-Update docker-compose.yml:
-```yaml
-ports:
-  - "8081:8080"
-```
-
-### Memory Issues
-
-Adjust heap sizes in `.env`:
-```env
-JAVA_MIN_HEAP=512m
-JAVA_MAX_HEAP=1024m
-```
-
-## Performance Tuning
+## Ottimizzazione delle Prestazioni
 
 ### Connection Pool
 
-For high-traffic scenarios:
+Per scenari ad alto traffico:
 
 ```env
-DB_POOL_MIN_IDLE=5
-DB_POOL_MAX_SIZE=20
+GOVPAY_GDE_MIN_POOL=5
+GOVPAY_GDE_MAX_POOL=20
 ```
 
-### JVM Options
+### Opzioni JVM
 
-For production deployments:
+Per deployment in produzione:
 
-```yaml
-environment:
-  JAVA_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=100"
+```env
+JAVA_OPTS=-XX:+UseG1GC -XX:MaxGCPauseMillis=100
+GOVPAY_GDE_JVM_MAX_RAM_PERCENTAGE=90
 ```
 
-## File Structure
+## Struttura File
 
 ```
 govpay-gde-api/
-├── Dockerfile.github       # Docker image definition
-├── build_image.sh          # Build script
-├── entrypoint.sh          # Container startup script
-├── docker-compose.yml     # Orchestration configuration
-├── .env.template          # Environment variables template
-├── DOCKER.md             # This file
-└── README.md             # Java development documentation
+├── docker/
+│   ├── build_image.sh              # Script di build
+│   ├── commons/
+│   │   └── entrypoint.sh           # Script di avvio container
+│   ├── govpay-gde/
+│   │   └── Dockerfile.github       # Definizione immagine Docker
+│   └── DOCKER.md                   # Questo file
+├── src/                            # Codice sorgente Java
+├── pom.xml                         # Configurazione Maven
+└── README.md                       # Documentazione sviluppo Java
 ```
 
-## Database Schema
+## Supporto
 
-GDE stores event journal entries. Ensure the database schema is initialized:
-
-```sql
--- Example table structure (actual schema in GovPay)
-CREATE TABLE eventi (
-  id BIGSERIAL PRIMARY KEY,
-  data_evento TIMESTAMP NOT NULL,
-  tipo_evento VARCHAR(255),
-  componente VARCHAR(255),
-  categoria VARCHAR(255),
-  ...
-);
-```
-
-The schema is managed by GovPay's main installer.
-
-## Security Considerations
-
-1. **Credentials**: Never commit `.env` file to version control
-2. **Secrets**: Use Docker secrets in production
-3. **Network**: Restrict API access using Docker networks
-4. **Authentication**: Implement API authentication for production
-5. **Firewall**: Limit access to actuator endpoints
-6. **Database**: Use read-only credentials if GDE is read-only
-
-## Production Deployment
-
-### Using Docker Secrets
-
-```yaml
-services:
-  govpay-gde-api:
-    secrets:
-      - db_password
-    environment:
-      SPRING_DATASOURCE_PASSWORD_FILE: /run/secrets/db_password
-
-secrets:
-  db_password:
-    external: true
-```
-
-### Using Docker Swarm
-
-```bash
-# Deploy as a stack
-docker stack deploy -c docker-compose.yml govpay-gde
-```
-
-### High Availability
-
-Run multiple replicas:
-
-```yaml
-deploy:
-  replicas: 3
-  update_config:
-    parallelism: 1
-    delay: 10s
-  restart_policy:
-    condition: on-failure
-```
-
-## Support
-
-For issues related to:
+Per problemi relativi a:
 - **GovPay**: https://github.com/link-it/govpay
-- **Java development**: See `README.md`
-- **Docker setup**: Contact your DevOps team
+- **Sviluppo Java**: Vedere `README.md`
+- **Configurazione Docker**: Contattare il team DevOps
 
-## License
-
-This Docker setup follows the same license as GovPay.
