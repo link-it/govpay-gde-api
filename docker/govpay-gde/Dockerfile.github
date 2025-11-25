@@ -1,0 +1,56 @@
+FROM eclipse-temurin:21-jre-alpine
+
+ARG govpay_gde_fullversion
+ARG govpay_gde_home=/opt/govpay-gde
+ARG govpay_gde_log=/var/log/govpay-gde
+
+LABEL maintainer="Link.it s.r.l."
+LABEL description="GovPay GDE (Giornale degli Eventi) REST API"
+LABEL govpay.gde.version="${govpay_gde_fullversion}"
+USER root
+
+ENV GOVPAY_GDE_FULLVERSION=${govpay_gde_fullversion} \
+GOVPAY_GDE_LOGDIR=${govpay_gde_log} \
+GOVPAY_GDE_HOME=${govpay_gde_home} \
+TZ=Europe/Rome
+
+
+RUN set -eux; \
+apk update; \
+apk upgrade; \
+apk add --no-cache bash curl tar unzip netcat-openbsd tzdata; \
+rm -rf /var/cache/apk/*; \
+echo "${TZ}" > /etc/timezone; \
+addgroup -S govpay ; \
+adduser -S -G govpay govpay; \
+mkdir -p ${GOVPAY_GDE_HOME} ${GOVPAY_GDE_LOGDIR} /opt/sql /opt/jdbc-drivers; \
+chown -R govpay:govpay ${GOVPAY_GDE_HOME} ${GOVPAY_GDE_LOGDIR} /opt/sql
+
+WORKDIR ${GOVPAY_GDE_HOME}
+
+# Download GDE JAR from GitHub release
+RUN set -eux; \
+curl -kL -sS -q -o /opt/govpay-gde/govpay-gde-api.jar  "https://github.com/link-it/govpay-gde-api/releases/download/${GOVPAY_GDE_FULLVERSION}/govpay-gde-api-${GOVPAY_GDE_FULLVERSION}.jar";
+
+
+# Copy entrypoint and initialization scripts
+COPY commons/entrypoint.sh /usr/local/bin/
+RUN chown -R govpay:0 /usr/local/bin/entrypoint.sh ${GOVPAY_GDE_HOME} ${GOVPAY_GDE_LOGDIR} \
+&& chmod -Rf g+rwX ${GOVPAY_GDE_HOME} ${GOVPAY_GDE_LOGDIR} \
+&& chmod ug=rx /usr/local/bin/entrypoint.sh
+
+
+
+USER govpay
+
+ENV GDE_TIME_ZONE=Europe/Rome \
+    SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT=20000 \
+    SPRING_DATASOURCE_HIKARI_IDLE_TIMEOUT=10000 \
+    SPRING_DATASOURCE_HIKARI_MAX_LIFETIME=600000 \
+    LOGGING_FILE_NAME=${GOVPAY_GDE_LOGDIR}/govpay-gde-api.log \
+    LOGGING_DIRECTORYPATH=${GOVPAY_GDE_LOGDIR} \
+    LOGGING_FILEPREFIX=govpay-gde-api
+
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD []
