@@ -47,6 +47,24 @@ jobs:
         fi
       env:
         NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+    - name: Check OSS_INDEX_USER
+      run: |
+        if [ -z "$OSS_INDEX_USER" ]; then
+          echo "OSS_INDEX_USER is NOT set!"
+        else
+          echo "OSS_INDEX_USER is set."
+        fi
+      env:
+        OSS_INDEX_USER: ${{ vars.OSS_INDEX_USER }}
+    - name: Check OSS_INDEX_PASSWORD
+      run: |
+        if [ -z "$OSS_INDEX_PASSWORD" ]; then
+          echo "OSS_INDEX_PASSWORD is NOT set!"
+        else
+          echo "OSS_INDEX_PASSWORD is set."
+        fi
+      env:
+        OSS_INDEX_PASSWORD: ${{ secrets.OSS_INDEX_PASSWORD }}
 
     #  Cache .dependency-check/data
     - name: Cache OWASP Dependency-Check DB
@@ -63,6 +81,8 @@ jobs:
       run: mvn install -P jar -Dspring.profiles.active=test -Duser.timezone=Europe/Rome -DnvdApiKey=$NVD_API_KEY -DossIndexUsername=$OSS_INDEX_USER -DossIndexPassword=$OSS_INDEX_PASSWORD -DdataDirectory=.dependency-check/data -Dowasp.format=ALL -Dowasp.output.dir=./dependency-check-report
       env:
         NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        OSS_INDEX_USER: ${{ vars.OSS_INDEX_USER }}
+        OSS_INDEX_PASSWORD: ${{ secrets.OSS_INDEX_PASSWORD }}
 
     - name: Show JaCoCo report location and Zip JaCoCo HTML report
       run: |
