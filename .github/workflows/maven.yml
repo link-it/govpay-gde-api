@@ -113,7 +113,21 @@ jobs:
           -Dsonar.coverage.exclusions=**/test/**,**/*Test*.java
           -Dsonar.java.source=21
           -Dsonar.java.libraries=target/dependency
-          
+
+    - name: License Analysis
+      run: |
+        set -euo pipefail
+        echo "Downloading license information..."
+        mvn org.codehaus.mojo:license-maven-plugin:2.4.0:aggregate-download-licenses -DexcludeScopes=test,provided,system -DincludeTransitiveDependencies=true
+        echo "Analyzing licenses..."
+        python3 .github/workflows/scripts/analyze_licenses.py --exceptions .github/workflows/scripts/license-exceptions.json
+
+    - name: Archive licenses analysis results
+      uses: actions/upload-artifact@v4
+      with:
+        name: third-party-licenses
+        path: third-party-licenses
+
     - name: Upload artifact to GitHub
       uses: actions/upload-artifact@v4.6.0
       with:
@@ -140,11 +154,25 @@ jobs:
         name: govpay-gde-api
         path: target/  # Assicurati che il file venga scaricato nella cartella target
 
+    - name: Download third-party-licenses artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: third-party-licenses
+        path: third-party-licenses
+
     - name: Rename the artifact file to include the tag
       run: |
         cp target/govpay-gde-api.war target/govpay-gde-api-${{ github.ref_name }}.war  # Rinominare il file war
         cp target/govpay-gde-api.jar target/govpay-gde-api-${{ github.ref_name }}.jar  # Rinominare il file jar
         cp target/site/jacoco/jacoco.xml target/jacoco.xml
+
+    - name: Zip third-party licenses
+      run: |
+        if [ -d "third-party-licenses" ]; then
+          zip -r target/third-party-licenses.zip third-party-licenses
+        else
+          echo "third-party-licenses directory not found, skipping..."
+        fi
 
     - name: List files in target directory
       run: ls -l target/
@@ -154,11 +182,12 @@ jobs:
       uses: softprops/action-gh-release@v2.2.1
       with:
         files: |
-          target/govpay-gde-api-${{ github.ref_name }}.war 
+          target/govpay-gde-api-${{ github.ref_name }}.war
           target/govpay-gde-api-${{ github.ref_name }}.jar
           target/jacoco.xml
           target/jacoco-html-report.zip
           target/dependency-check-report.html
           target/dependency-check-report.xml
+          target/third-party-licenses.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
