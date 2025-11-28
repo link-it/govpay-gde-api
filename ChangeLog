@@ -1,0 +1,101 @@
+2025-11-27  Giuliano Pintori <pintori@link.it>
+
+	* [Pipeline]
+	Aggiunta analisi delle licenze delle dipendenze alla pipeline CI/CD.
+	Introdotto script Python per la verifica automatica della compatibilità delle licenze (GPLv3 e Enterprise).
+	I report delle licenze vengono inclusi negli artefatti della release.
+
+2025-11-27  Giuliano Pintori <pintori@link.it>
+
+	* [Sicurezza]
+	Corrette vulnerabilità nelle dipendenze:
+	- CVE-2025-41249, CVE-2025-41242 (Spring Framework): aggiornato a Spring Boot 3.5.7
+	- CVE-2025-55754, CVE-2025-48989, CVE-2025-55752, CVE-2025-61795 (Tomcat): aggiornato a 10.1.48
+	- CVE-2025-11226 (Logback): aggiornato a 1.5.19
+	- CVE-2025-59250 (MSSQL JDBC): aggiornato a 12.10.2
+
+2025-08-26  Lorenzo Nardi <nardi@link.it>
+
+	* [Documentazione]
+	Aggiunto badge SonarCloud al README.
+
+2025-08-11  Giuliano Pintori <pintori@link.it>
+
+	* [Core]
+	Risolto Issue #10
+	Aggiunto supporto per il salvataggio degli eventi in tutti i database supportati da GovPay:
+	PostgreSQL, MySQL, Oracle, SQL Server, H2, HSQL.
+	Aggiornate librerie Spring Boot.
+
+2025-07-29  Giuliano Pintori <pintori@link.it>
+
+	* [Core]
+	Risoluzione segnalazioni SonarCloud per miglioramento qualità del codice.
+
+2025-07-22  Giuliano Pintori <pintori@link.it>
+
+	* [Core]
+	Aggiunti driver JDBC mancanti al runtime per il supporto multi-database.
+
+2025-07-17  Giuliano Pintori <pintori@link.it>
+
+	* [Sicurezza]
+	Risolto Issue #6
+	Risoluzione delle vulnerabilità nelle dipendenze.
+	Aggiornata versione Spring Boot alla 3.5.3.
+
+	* [Pipeline]
+	Abilitato scan dipendenze OWASP nella pipeline CI/CD.
+
+2025-03-24  Giuliano Pintori <pintori@link.it>
+
+	* [Sicurezza]
+	Risolte vulnerabilità nelle dipendenze.
+
+2025-03-18  Giuliano Pintori <pintori@link.it>
+
+	* [Pipeline]
+	Aggiornato script per la creazione di due artefatti: JAR e WAR.
+
+2025-03-11  Giuliano Pintori <pintori@link.it>
+
+	* [Core]
+	Aggiunta gestione del componente evento API_LEGACY.
+
+2025-03-04  Giuliano Pintori <pintori@link.it>
+
+	* [Core]
+	Eliminati file logback.xml e spostata gestione dei log come proprietà definite nell'application.properties.
+	Eliminate properties non necessarie.
+
+2025-02-06  Giuliano Pintori <pintori@link.it>
+
+	* [Core]
+	Risolto Issue #5
+	Corretti errori di deploy su Tomcat.
+	Corretti livelli di log per le operazioni del web controller.
+
+2025-02-03  Giuliano Pintori <pintori@link.it>
+
+	* Rilasciata versione 1.0.0
+
+	* [Core]
+	Aggiornato stack applicativo a Java 21.
+	Risolte segnalazioni SonarCloud.
+	Risolte vulnerabilità nelle librerie.
+	Estratte costanti per i pattern delle date.
+	Aggiunto logging con Logback.
+
+2024-04-12  Giuliano Pintori <pintori@link.it>
+
+	* [Core]
+	Risolto Issue #1
+	Prima versione del microservizio GDE (Giornale degli Eventi).
+	Implementate API REST per la gestione degli eventi:
+	- POST /eventi: creazione nuovo evento
+	- GET /eventi: ricerca eventi con filtri
+	- GET /eventi/{id}: dettaglio evento
+
+2024-02-02  Lorenzo Nardi <nardi@link.it>
+
+	* Creazione repository.
