@@ -1,14 +1,22 @@
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=link-it_govpay-gde-api&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=link-it_govpay-gde-api)
+<p align="center">
+<img src="https://www.link.it/wp-content/uploads/2025/01/logo-govpay.svg" alt="GovPay Logo" width="200"/>
+</p>
 
-# govpay-gde-api
+# GovPay - Porta di accesso al sistema pagoPA - GDE Api
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=link-it_govpay-gde-api&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=link-it_govpay-gde-api)
+[![Docker Hub](https://img.shields.io/docker/v/linkitaly/govpay-gde-api?label=Docker%20Hub&logo=docker)](https://hub.docker.com/r/linkitaly/govpay-gde-api)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://raw.githubusercontent.com/link-it/govpay-gde-api/main/LICENSE)
+
+## Sommario
+
 API di accesso al Giornale degli Eventi di GovPay
 
 ## Istruzioni di compilazione
 
-Il progetto utilizza librerie spring-boot versione 3.4.1 e JDK 21.
+Il progetto utilizza librerie Spring Boot versione 3.5.7 e JDK 21.
 
 Per la compilazione eseguire il seguente comando, verranno eseguiti anche i test.
-
 
 ``` bash
 mvn clean install -P [jar|war]
@@ -22,17 +30,15 @@ Per l'avvio dell'applicativo come standalone eseguire:
 mvn spring-boot:run
 ```
 
-Per sovrascrivere le proprieta' definite nel file `application.properties` utilizzare il seguente sistema:
+Per sovrascrivere le proprietà definite nel file `application.properties` utilizzare il seguente sistema:
 
 ``` bash
 mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.datasource.url=[NUOVO_VALORE] ..."
-
 ```
 
-# Configurazione
+## Configurazione
 
-All'interno del file `application.properties` sono definite le seguenti proprieta':
-
+All'interno del file `application.properties` sono definite le seguenti proprietà:
 
 ``` bash
 # ----------- SPRING SERVLET ------------
@@ -47,16 +53,13 @@ management.endpoints.web.base-path=[Basepath dove esporre i servizi di stato app
 # -------------- BUSINESS LOGIC PROPERTIES  ----------------
 
 gde.time-zone=[TimeZone dell'applicazione]
-
 ```
 
-## Configurazione connessione al db
+## Configurazione connessione al database
 
-Per la configurazione della connessione al db utilizzare le seguenti proprieta':
+Per la configurazione della connessione al database utilizzare le seguenti proprietà:
 
 ``` bash
-
-
 # Configurazione DB
 spring.datasource.jndiName=[JNDI NAME del datasource]
 spring.datasource.url=[URL CONNESSIONE DB]
@@ -75,8 +78,23 @@ spring.datasource.hikari.minimum-idle=2
 spring.datasource.hikari.maximum-pool-size=5
 spring.datasource.hikari.idle-timeout=10000
 spring.datasource.hikari.max-lifetime=1000
-
 ```
 
+## Configurazione logging
 
-All'interno del file `log4j2.xml` si definisce la configurazione di log dell'applicazione.
+La configurazione del logging è gestita tramite le proprietà definite in `application.properties`:
+
+``` bash
+logging.file.name=[Path completo del file di log]
+logging.level.it.govpay=[Livello di log: DEBUG, INFO, WARN, ERROR]
+```
+
+## Docker
+
+L'immagine Docker è disponibile su Docker Hub: [linkitaly/govpay-gde-api](https://hub.docker.com/r/linkitaly/govpay-gde-api)
+
+``` bash
+docker pull linkitaly/govpay-gde-api:latest
+```
+
+Per la documentazione completa sull'utilizzo dell'immagine Docker consultare il file [docker/DOCKER.md](docker/DOCKER.md).
