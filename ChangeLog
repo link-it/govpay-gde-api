@@ -1,3 +1,14 @@
+2025-12-11  Giuliano Pintori <pintori@link.it>
+
+	* Rilasciata versione 1.0.4
+
+2025-12-11  Giuliano Pintori <pintori@link.it>
+
+	* [Docker]
+	Corretto bug nell'entrypoint che impediva il corretto caricamento del file ORM.
+	La variabile SPRING_JPA_MAPPING_RESOURCES non veniva esportata, causando errori
+	di persistenza ("Identifier must be manually assigned before calling persist").
+
 2025-12-05  Giuliano Pintori <pintori@link.it>
 
 	* Rilasciata versione 1.0.3
