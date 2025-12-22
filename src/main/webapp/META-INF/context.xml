@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context>
+    <Environment name="spring.config.location" value="file:///D:/GovPaySTG/" type="java.lang.String"/>
+    <Environment name="spring.config.name" value="govpay-gde-api" type="java.lang.String"/>
+</Context>
