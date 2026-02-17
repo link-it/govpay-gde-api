@@ -98,14 +98,16 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	}
 	
 	@Override
-	protected @Nullable ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+	@Nullable
+	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		var error = ex.getBindingResult().getAllErrors().get(0);
 		return 	buildResponseProblem(HttpStatus.BAD_REQUEST, RestResponseEntityExceptionHandler.extractValidationError(error));
 	}
 
 	@Override
-	protected @Nullable ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
+	@Nullable
+	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
 			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		
 		String msg;
@@ -118,13 +120,15 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	}
 	
 	@Override
-	protected @Nullable ResponseEntity<Object> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex,	HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+	@Nullable
+	protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex,	HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		return 	buildResponseProblem(HttpStatus.BAD_REQUEST,ex.getLocalizedMessage());
 	}
 
 	
 	@Override
-	protected @Nullable ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+	@Nullable
+	protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		return buildResponseProblem(HttpStatus.BAD_REQUEST,ex.getLocalizedMessage());
 	}
 	
@@ -134,7 +138,8 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	 * 
 	 */
 	@Override
-	protected @Nullable ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(
+	@Nullable
+	protected ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(
 			HttpMediaTypeNotAcceptableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		
 		return buildResponseProblem(HttpStatus.NOT_ACCEPTABLE, ex.getLocalizedMessage());
@@ -142,7 +147,8 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	
 	
 	@Override
-	protected @Nullable ResponseEntity<Object> handleExceptionInternal(
+	@Nullable
+	protected ResponseEntity<Object> handleExceptionInternal(
 			Exception ex, @Nullable Object body, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 
 		if (HttpStatus.INTERNAL_SERVER_ERROR.equals(status)) {
