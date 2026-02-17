@@ -4,37 +4,21 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.7</version>
+		<groupId>org.gov4j.govpay</groupId>
+		<artifactId>govpay-bom</artifactId>
+		<version>1.1.1</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>it.govpay.gde</groupId>
 	<artifactId>gde-api</artifactId>
-	<version>1.0.4</version>
+	<version>1.1.0</version>
 	<packaging>${packaging.type}</packaging>
 	<name>GovPay - Giornale degli Eventi - API</name>
 	<description>GovPay Modulo per la registrazione degli eventi</description>
 
 	<properties>
 		<java.version>21</java.version>
-		<maven.compiler.source>${java.version}</maven.compiler.source>
-		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<maven.compiler.release>${java.version}</maven.compiler.release>
-
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-		<!-- Versioni Plugin Maven -->
-		<maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
-		<maven.install.plugin.version>2.5.2</maven.install.plugin.version>
-		<exec.maven.plugin.versione>1.6.0</exec.maven.plugin.versione>
-
-		<!-- Apache Commons IO -->
-		<commons-io.version>2.18.0</commons-io.version>
-		
-		<!-- Apache Commons Lang3 -->
-		<commons-lang3.version>3.18.0</commons-lang3.version>
 
 		<!-- Swagger-codegen -->
 		<openapi.tool.codegen.version>6.6.0</openapi.tool.codegen.version>
@@ -45,38 +29,24 @@
 		<!-- Javax -->
 		<javax.annotation.version>1.3.2</javax.annotation.version>
 
-		<!-- Swagger-annotations -->
-		<swagger-annotations.version>1.6.2</swagger-annotations.version>
+
 
 		<!-- annotazione bean generati notnull -->
 		<jsr305.version>3.0.2</jsr305.version>
 
-		<!-- mapper conversione oggetti -->
-		<mapstruct.version>1.5.1.Final</mapstruct.version>
-
-		<jacoco.version>0.8.13</jacoco.version>
 		<wagon-ssh-external.version>3.5.3</wagon-ssh-external.version>
 
 		<springdoc.version>1.8.0</springdoc.version>
 		<swagger-ui.version>5.20.1</swagger-ui.version>
-		
+
 		<javax.annotation-api.version>1.3.2</javax.annotation-api.version>
-		
+
 		<owasp.falsePositives.dir>src/main/resources/owasp/falsePositives</owasp.falsePositives.dir>
 		<!-- owasp config -->
 		<owasp>verify</owasp> <!-- owasp phase, use 'none' for disable -->
-		<owasp.plugin.version>12.1.3</owasp.plugin.version>
 		<owasp.plugin.autoUpdate>true</owasp.plugin.autoUpdate> <!-- Impostare a false quando ci sono problemi su repository NIST -->
 		<owasp.plugin.failBuildOnCVSS>11</owasp.plugin.failBuildOnCVSS>
 		<owasp.ossindex.prevents429.sleep>5</owasp.ossindex.prevents429.sleep> <!-- https://github.com/sonatype/ossindex-maven/issues/17 -->
-		
-		<logback.version>1.5.19</logback.version>
-
-		<mssql-jdbc.version>12.10.2.jre11</mssql-jdbc.version>
-
-		<h2.version>2.3.232</h2.version>
-		
-		<json-smart.version>2.5.2</json-smart.version>
 
 		<sonar.coverage.exclusions>**/test/**,**/*Test*.java</sonar.coverage.exclusions>
 	</properties>
@@ -185,7 +155,6 @@
 		<dependency>
 			<groupId>org.mapstruct</groupId>
 			<artifactId>mapstruct</artifactId>
-			<version>${mapstruct.version}</version>
 		</dependency>
 
 		<dependency>
@@ -217,7 +186,7 @@
 		<dependency>
 			<groupId>io.swagger</groupId>
 			<artifactId>swagger-annotations</artifactId>
-			<version>${swagger-annotations.version}</version>
+			<version>${swagger-v1.version}</version>
 		</dependency>
 
 		<dependency>
@@ -240,7 +209,6 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>${commons-io.version}</version>
 		</dependency>
 
 		<dependency>
@@ -320,6 +288,14 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>repackage</id>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -386,7 +362,6 @@
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>${jacoco.version}</version>
 				<executions>
 					<execution>
 						<goals>
@@ -413,7 +388,6 @@
 			<plugin>
 				<groupId>org.owasp</groupId>
 				<artifactId>dependency-check-maven</artifactId>
-				<version>${owasp.plugin.version}</version>
 				<executions>
 					<execution>
 						<id>check owasp</id>
@@ -458,5 +432,18 @@
 			</extension>
 		</extensions>
 	</build>
+
+	<repositories>
+		<repository>
+			<id>central-snapshots</id>
+			<url>https://central.sonatype.com/repository/maven-snapshots</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+	</repositories>
 
 </project>

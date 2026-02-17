@@ -5,10 +5,9 @@ import java.net.URISyntaxException;
 import java.util.AbstractMap;
 import java.util.Map;
 
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -99,6 +98,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	}
 	
 	@Override
+	@Nullable
 	protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
 			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		var error = ex.getBindingResult().getAllErrors().get(0);
@@ -106,6 +106,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	}
 
 	@Override
+	@Nullable
 	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
 			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		
@@ -119,12 +120,14 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	}
 	
 	@Override
+	@Nullable
 	protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex,	HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		return 	buildResponseProblem(HttpStatus.BAD_REQUEST,ex.getLocalizedMessage());
 	}
 
 	
 	@Override
+	@Nullable
 	protected ResponseEntity<Object> handleMissingServletRequestParameter(MissingServletRequestParameterException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		return buildResponseProblem(HttpStatus.BAD_REQUEST,ex.getLocalizedMessage());
 	}
@@ -135,6 +138,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	 * 
 	 */
 	@Override
+	@Nullable
 	protected ResponseEntity<Object> handleHttpMediaTypeNotAcceptable(
 			HttpMediaTypeNotAcceptableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		
@@ -143,6 +147,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	
 	
 	@Override
+	@Nullable
 	protected ResponseEntity<Object> handleExceptionInternal(
 			Exception ex, @Nullable Object body, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 
