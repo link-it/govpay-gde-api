@@ -1,3 +1,16 @@
+2026-02-25  Giuliano Pintori <pintori@link.it>
+
+	* [Core]
+	Corretta gestione timezone per la persistenza delle date.
+	Aggiunta configurazione Hibernate per normalizzare le date al fuso orario Europe/Rome
+	invece che UTC (hibernate.jdbc.time_zone, hibernate.timezone.default_storage=NORMALIZE).
+
+	* [Docker]
+	Aggiunto Dockerfile.daFile per la creazione dell'immagine Docker da file locale.
+
+	* [Build]
+	Aggiornato parent govpay-bom alla versione 1.1.2.
+
 2026-02-12  Giuliano Pintori <pintori@link.it>
 
 	* Rilasciata versione 1.1.0
