@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>it.govpay.gde</groupId>
 	<artifactId>gde-api</artifactId>
-	<version>1.1.0</version>
+	<version>1.1.1</version>
 	<packaging>${packaging.type}</packaging>
 	<name>GovPay - Giornale degli Eventi - API</name>
 	<description>GovPay Modulo per la registrazione degli eventi</description>
@@ -64,27 +64,27 @@
 				<dependency>
 					<groupId>org.postgresql</groupId>
 					<artifactId>postgresql</artifactId>
-					<scope>runtime</scope>
+					<scope>provided</scope>
 				</dependency>
 				<dependency>
 					<groupId>com.h2database</groupId>
 					<artifactId>h2</artifactId>
-					<scope>runtime</scope>
+					<scope>provided</scope>
 				</dependency>
 				<dependency>
 					<groupId>com.oracle.database.jdbc</groupId>
 					<artifactId>ojdbc11</artifactId>
-					<scope>runtime</scope>
+					<scope>provided</scope>
 				</dependency>
 				<dependency>
 					<groupId>com.mysql</groupId>
-        			<artifactId>mysql-connector-j</artifactId>	
-					<scope>runtime</scope>
+        			<artifactId>mysql-connector-j</artifactId>
+					<scope>provided</scope>
 				</dependency>
 				<dependency>
 					<groupId>com.microsoft.sqlserver</groupId>
-        			<artifactId>mssql-jdbc</artifactId>	
-					<scope>runtime</scope>
+        			<artifactId>mssql-jdbc</artifactId>
+					<scope>provided</scope>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -288,6 +288,31 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<layout>ZIP</layout>
+					<excludes>
+						<exclude>
+							<groupId>org.postgresql</groupId>
+							<artifactId>postgresql</artifactId>
+						</exclude>
+						<exclude>
+							<groupId>com.h2database</groupId>
+							<artifactId>h2</artifactId>
+						</exclude>
+						<exclude>
+							<groupId>com.oracle.database.jdbc</groupId>
+							<artifactId>ojdbc11</artifactId>
+						</exclude>
+						<exclude>
+							<groupId>com.mysql</groupId>
+							<artifactId>mysql-connector-j</artifactId>
+						</exclude>
+						<exclude>
+							<groupId>com.microsoft.sqlserver</groupId>
+							<artifactId>mssql-jdbc</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<id>repackage</id>

@@ -57,6 +57,19 @@ docker-compose ps
 curl http://localhost:10002/actuator/health
 ```
 
+## Driver JDBC
+
+I driver JDBC **non sono inclusi** nel fat jar e devono essere forniti esternamente.
+L'entrypoint imposta automaticamente `LOADER_PATH=/opt/jdbc-drivers` per il `PropertiesLauncher` di Spring Boot.
+
+I driver devono essere montati come volume nella directory `/opt/jdbc-drivers`:
+
+```bash
+docker run -v ./jdbc-drivers:/opt/jdbc-drivers linkitaly/govpay-gde-api
+```
+
+Per ulteriori dettagli sui driver supportati, consultare [jdbc-drivers/README.md](jdbc-drivers/README.md).
+
 ## Architettura
 
 ```
@@ -261,7 +274,10 @@ govpay-gde-api/
 │   ├── commons/
 │   │   └── entrypoint.sh           # Script di avvio container
 │   ├── govpay-gde/
-│   │   └── Dockerfile.github       # Definizione immagine Docker
+│   │   ├── Dockerfile.daFile       # Build da file locale
+│   │   └── Dockerfile.github       # Build da release GitHub
+│   ├── jdbc-drivers/
+│   │   └── README.md               # Documentazione driver JDBC
 │   └── DOCKER.md                   # Questo file
 ├── src/                            # Codice sorgente Java
 ├── pom.xml                         # Configurazione Maven

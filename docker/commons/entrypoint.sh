@@ -112,6 +112,13 @@ GOVPAY_GDE_MAX_POOL=${GOVPAY_GDE_MAX_POOL:-5}
     log_info "Database: ${GOVPAY_DB_TYPE} su ${GOVPAY_DB_SERVER}/${GOVPAY_DB_NAME}"
 
 ##############################################################################
+# Configurazione LOADER_PATH per driver JDBC esterni
+##############################################################################
+
+export LOADER_PATH="${GOVPAY_DS_JDBC_LIBS}"
+log_info "LOADER_PATH: ${LOADER_PATH}"
+
+##############################################################################
 # Configurazione porta server
 ##############################################################################
 

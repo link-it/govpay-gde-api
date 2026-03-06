@@ -25,16 +25,43 @@ mvn clean install -P [jar|war]
 
 Il profilo permette di selezionare il packaging dei progetti (jar o war).
 
-Per l'avvio dell'applicativo come standalone eseguire:
+## Driver JDBC
+
+I driver JDBC **non sono inclusi** nel fat jar e devono essere forniti esternamente a runtime.
+Creare una directory (es. `jdbc-drivers/`) e copiarvi il driver del database utilizzato:
+
+| Database   | Driver |
+|------------|--------|
+| PostgreSQL | [postgresql-42.7.9.jar](https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.9/postgresql-42.7.9.jar) |
+| MySQL      | [mysql-connector-j-9.6.0.jar](https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/9.6.0/mysql-connector-j-9.6.0.jar) |
+| Oracle     | [ojdbc11-23.26.1.0.0.jar](https://repo1.maven.org/maven2/com/oracle/database/jdbc/ojdbc11/23.26.1.0.0/ojdbc11-23.26.1.0.0.jar) |
+| SQL Server | [mssql-jdbc-12.8.2.jre11.jar](https://repo1.maven.org/maven2/com/microsoft/sqlserver/mssql-jdbc/12.8.2.jre11/mssql-jdbc-12.8.2.jre11.jar) |
+| H2         | [h2-2.4.240.jar](https://repo1.maven.org/maven2/com/h2database/h2/2.4.240/h2-2.4.240.jar) |
+
+### Esecuzione
+
+Il jar utilizza `PropertiesLauncher` (layout ZIP) e richiede la proprietà `loader.path` per indicare
+la directory contenente i driver JDBC:
 
 ``` bash
-mvn spring-boot:run
+# Avvio applicazione
+java -Dloader.path=./jdbc-drivers -jar target/govpay-gde-api.jar
 ```
 
 Per sovrascrivere le proprietà definite nel file `application.properties` utilizzare il seguente sistema:
 
 ``` bash
-mvn spring-boot:run -Dspring-boot.run.jvmArguments="-Dspring.datasource.url=[NUOVO_VALORE] ..."
+java -Dloader.path=./jdbc-drivers -Dspring.datasource.url=[NUOVO_VALORE] -jar target/govpay-gde-api.jar
+```
+
+### Esecuzione con Docker
+
+Con Docker la variabile d'ambiente `LOADER_PATH` viene impostata automaticamente dall'entrypoint
+alla directory `/opt/jdbc-drivers`. I driver devono essere montati come volume o copiati nell'immagine:
+
+``` bash
+# Montaggio volume con il driver JDBC
+docker run -v ./jdbc-drivers:/opt/jdbc-drivers linkitaly/govpay-gde-api
 ```
 
 ## Configurazione
