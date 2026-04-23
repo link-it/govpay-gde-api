@@ -154,64 +154,74 @@ jobs:
       security-events: write
     uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.5"
     with:
-      matrix-property: 'be-'
+      matrix-property: ''
       fail-on-vuln: ${{ github.ref_name == 'main' || github.ref_type == 'tag' }}
+      results-file-name: osv-report.sarif
       scan-args: |-
         -r
         .
         --lockfile
         ./pom.xml
 
+  # ── GitHub Release (solo tag) ────────────────────────────────────────
   release:
     runs-on: ubuntu-latest
     needs: [ build, osv-scan ]
-    if: startsWith(github.ref, 'refs/tags/')  # Esegui solo per i tag
+    if: startsWith(github.ref, 'refs/tags/')
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
 
-    - name: Download artifact from build job
+    # Artifact build (JAR, WAR, report OWASP e JaCoCo)
+    - name: Download govpay-gde-api artifact
       uses: actions/download-artifact@v7
       with:
         name: govpay-gde-api
-        path: target/  # Assicurati che il file venga scaricato nella cartella target
+        path: jar/
 
-    - name: Download third-party-licenses artifact
+    # Report — finiranno nello ZIP
+    - name: Download third-party-licenses
       uses: actions/download-artifact@v7
       with:
         name: third-party-licenses
-        path: third-party-licenses
+        path: reports/third-party-licenses/
 
-    - name: Rename the artifact file to include the tag
+    - name: Download OSV Scanner SARIF
+      uses: actions/download-artifact@v7
+      with:
+        name: OSV Scanner SARIF file
+        path: reports/osv/
+
+    - name: Rename artifacts with tag version
       run: |
-        cp target/govpay-gde-api.war target/govpay-gde-api-${{ github.ref_name }}.war  # Rinominare il file war
-        cp target/govpay-gde-api.jar target/govpay-gde-api-${{ github.ref_name }}.jar  # Rinominare il file jar
-        cp target/site/jacoco/jacoco.xml target/jacoco.xml
+        cp jar/govpay-gde-api.war jar/govpay-gde-api-${{ github.ref_name }}.war
+        cp jar/govpay-gde-api.jar jar/govpay-gde-api-${{ github.ref_name }}.jar
 
-    - name: Zip third-party licenses
+    - name: Assemble reports ZIP
       run: |
-        if [ -d "third-party-licenses" ]; then
-          zip -r target/third-party-licenses.zip third-party-licenses
-        else
-          echo "third-party-licenses directory not found, skipping..."
-        fi
+        mkdir -p reports/owasp reports/jacoco reports/osv
 
-    - name: List files in target directory
-      run: ls -l target/
+        # OWASP e JaCoCo dall'artifact build
+        cp jar/dependency-check-report.html reports/owasp/ 2>/dev/null || true
+        cp jar/dependency-check-report.xml  reports/owasp/ 2>/dev/null || true
+        cp jar/site/jacoco/jacoco.xml       reports/jacoco/ 2>/dev/null || true
+        cp jar/jacoco-html-report.zip       reports/jacoco/ 2>/dev/null || true
+
+        # pipeline info
+        echo "Pipeline Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+          > reports/${{ github.ref_name }}_actions_run.txt
+
+        zip -r release-reports-${{ github.ref_name }}.zip reports/
+        ls -lh release-reports-${{ github.ref_name }}.zip
 
     - name: Create GitHub release
-      id: create_release
       uses: softprops/action-gh-release@v2.2.1
       with:
         files: |
-          target/govpay-gde-api-${{ github.ref_name }}.war
-          target/govpay-gde-api-${{ github.ref_name }}.jar
-          target/jacoco.xml
-          target/jacoco-html-report.zip
-          target/dependency-check-report.html
-          target/dependency-check-report.xml
-          target/third-party-licenses.zip
+          jar/govpay-gde-api-${{ github.ref_name }}.war
+          jar/govpay-gde-api-${{ github.ref_name }}.jar
+          release-reports-${{ github.ref_name }}.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 

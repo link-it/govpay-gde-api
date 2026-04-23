@@ -1,3 +1,10 @@
+2026-04-23  Giuliano Pintori <pintori@link.it>
+
+	* [Pipeline]
+	Ristrutturato job release per collezionare tutti i report (OWASP, JaCoCo, licenze,
+	OSV SARIF) in un unico ZIP allegato alla release GitHub.
+	Aggiunto download del report OSV Scanner SARIF e link alla pipeline run.
+
 2026-04-21  Giuliano Pintori <pintori@link.it>
 
 	* [Build]
