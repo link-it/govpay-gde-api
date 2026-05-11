@@ -53,13 +53,19 @@ public class GdeController implements EventiApi{
 
 	@Override
 	public ResponseEntity<Void> addEvento(@Valid NuovoEvento nuovoEvento) {
-		this.logger.info("Salvataggio evento: {}", nuovoEvento);
-		
+		this.logger.info("Salvataggio evento [componente={}, categoria={}, tipo={}/{}, esito={}, idDominio={}, iuv={}]",
+				nuovoEvento.getComponente(), nuovoEvento.getCategoriaEvento(),
+				nuovoEvento.getTipoEvento(), nuovoEvento.getSottotipoEvento(),
+				nuovoEvento.getEsito(), nuovoEvento.getIdDominio(), nuovoEvento.getIuv());
+		if (this.logger.isTraceEnabled()) {
+			this.logger.trace("Salvataggio evento - payload completo: {}", nuovoEvento);
+		}
+
 		EventoEntity entity = this.nuovoEventoMapperImpl.nuovoEventoToEventoEntity(nuovoEvento);
 		
 		entity = this.eventoRepository.save(entity);
-		
-		this.logger.debug("Salvataggio evento completato.");
+
+		this.logger.info("Salvataggio evento completato [id={}]", entity.getId());
 		
 		MultiValueMap<String, String> headers = new HttpHeaders();
 		
@@ -78,7 +84,7 @@ public class GdeController implements EventiApi{
 			EsitoEvento esito, RuoloEvento ruolo, String sottotipoEvento, String tipoEvento,
 			ComponenteEvento componente, Integer severitaDa, Integer severitaA) {
 		
-		this.logger.info("Ricerca eventi...");
+		this.logger.debug("Ricerca eventi...");
 		
 		Specification<EventoEntity> spec = creaFiltriDiRicercaDate(dataDa, dataA);
 		
@@ -101,7 +107,7 @@ public class GdeController implements EventiApi{
 			ret.addItemsItem(this.eventoMapperImpl.eventoEntityToEvento(user));
 		}
 		
-		this.logger.info("Ricerca eventi completata");
+		this.logger.debug("Ricerca eventi completata [trovati={}]", eventi.getTotalElements());
 		
 		return ResponseEntity.ok(ret);
 	}

@@ -1,3 +1,19 @@
+2026-05-11  Giuliano Pintori <pintori@link.it>
+
+	* [Logging]
+	Ridotto a TRACE il log del payload completo alla ricezione di un nuovo evento
+	(controller addEvento). A livello INFO viene ora loggata una riga sintetica con
+	i metadati essenziali dell'evento (componente, categoria, tipo/sottotipo, esito,
+	idDominio, iuv) per evitare di inquinare i log di produzione con payload
+	voluminosi.
+	Rivisti gli altri statement di log del controller:
+	- Salvataggio evento: chiusura promossa da DEBUG a INFO con id entita' creata.
+	- Ricerca eventi: start e chiusura demotati da INFO a DEBUG (alta frequenza);
+	  chiusura arricchita con il numero totale di eventi trovati.
+	OffsetDateTimeDeserializer: DateTimeParseException nel percorso di recovery
+	loggata a WARN (era ERROR) usando placeholder slf4j al posto della
+	concatenazione di stringhe.
+
 2026-05-05  Giuliano Pintori <pintori@link.it>
 
 	* [Build]
