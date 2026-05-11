@@ -51,7 +51,7 @@ public class OffsetDateTimeDeserializer extends StdScalarDeserializer<OffsetDate
 			try {
 				return OffsetDateTime.parse(dateString, formatter);
 			}catch (DateTimeParseException e) {
-				logger.error("Error parsing date: " + e.getMessage(), e);
+				logger.warn("Parsing OffsetDateTime fallito, tentativo come LocalDateTime: {}", e.getMessage());
 				ZoneOffset offset = ZoneOffset.ofHoursMinutes(1, 0); // CET (Central European Time)
 				LocalDateTime localDateTime = LocalDateTime.parse(dateString, formatter);
 				if (localDateTime != null) {
