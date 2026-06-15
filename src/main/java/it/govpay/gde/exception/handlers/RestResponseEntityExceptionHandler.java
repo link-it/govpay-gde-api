@@ -5,9 +5,9 @@ import java.net.URISyntaxException;
 import java.util.AbstractMap;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.lang.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -28,7 +28,9 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.util.WebUtils;
 
-import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
+import tools.jackson.databind.exc.ValueInstantiationException;
+
+import jakarta.validation.ConstraintViolationException;
 
 import it.govpay.gde.beans.Problem;
 import it.govpay.gde.exception.AttributeConverterException;
@@ -89,6 +91,15 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 	@ExceptionHandler(ResourceNotFoundException.class)
 	public ResponseEntity<Object> handleResourceNotFound(ResourceNotFoundException ex, WebRequest request) {
 		return buildResponseProblem(HttpStatus.NOT_FOUND, ex.getLocalizedMessage());
+	}
+
+	/**
+	 * Violazioni dei vincoli di Bean Validation sui parametri di metodo (es. @Min/@Max/@Pattern
+	 * sui parametri di query), sollevate dalla method validation di Spring/Hibernate Validator.
+	 */
+	@ExceptionHandler(ConstraintViolationException.class)
+	public ResponseEntity<Object> handleConstraintViolation(ConstraintViolationException ex, WebRequest request) {
+		return buildResponseProblem(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage());
 	}
 
 	@ExceptionHandler({Throwable.class, RuntimeException.class, InternalException.class, AttributeConverterException.class})

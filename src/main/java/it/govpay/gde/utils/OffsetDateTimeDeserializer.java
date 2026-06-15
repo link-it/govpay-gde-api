@@ -1,6 +1,5 @@
 package it.govpay.gde.utils;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -11,10 +10,11 @@ import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.StdScalarDeserializer;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.core.JsonToken;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.deser.std.StdScalarDeserializer;
 
 import it.govpay.gde.costanti.Costanti;
 
@@ -31,16 +31,17 @@ public class OffsetDateTimeDeserializer extends StdScalarDeserializer<OffsetDate
 	}
 
 	@Override
-	public OffsetDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
-		try {
-			JsonToken currentToken = jsonParser.getCurrentToken();
-			if (currentToken == JsonToken.VALUE_STRING) {
-				return parseOffsetDateTime(jsonParser.getText(), this.formatterMillis);
-			} else {
-				return null;
+	public OffsetDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws JacksonException {
+		JsonToken currentToken = jsonParser.currentToken();
+		if (currentToken == JsonToken.VALUE_STRING) {
+			String text = jsonParser.getText();
+			try {
+				return parseOffsetDateTime(text, this.formatterMillis);
+			} catch (DateTimeParseException e) {
+				throw deserializationContext.weirdStringException(text, OffsetDateTime.class, e.getMessage());
 			}
-		} catch (IOException | DateTimeParseException e) {
-			throw new IOException(e);
+		} else {
+			return null;
 		}
 	}
 

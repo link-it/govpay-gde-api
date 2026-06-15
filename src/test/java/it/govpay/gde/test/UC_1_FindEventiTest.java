@@ -3,6 +3,7 @@ package it.govpay.gde.test;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -12,7 +13,7 @@ import java.io.ByteArrayInputStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
@@ -247,15 +248,24 @@ class UC_1_FindEventiTest {
 	
 	@Test
 	void UC_1_16_FindAll_OffsetLimit_KO() throws Exception {
-		this.mockMvc.perform(get(Costanti.EVENTI_PATH)
+		// offset negativo: con la Bean Validation attiva (Spring Boot 4) viola @Min(0) -> 400
+		MvcResult resultOffset = this.mockMvc.perform(get(Costanti.EVENTI_PATH)
 				 .param("offset", "-1")
 				 .param("limit",  "1")
 								)
-					.andExpect(status().isOk())
-					.andExpect(jsonPath("$.page.total", is(2)))
-					;
-		
-		
+					.andExpect(status().isBadRequest())
+					.andReturn();
+		JsonReader readerOffset = Json.createReader(new ByteArrayInputStream(resultOffset.getResponse().getContentAsByteArray()));
+		JsonObject problemOffset = readerOffset.readObject();
+		assertNotNull(problemOffset.getString("type"));
+		assertNotNull(problemOffset.getString("title"));
+		assertNotNull(problemOffset.getString("detail"));
+		assertEquals(400, problemOffset.getInt("status"));
+		assertEquals("Bad Request", problemOffset.getString("title"));
+		assertTrue(problemOffset.getString("detail").contains("offset"));
+		assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problemOffset.getString("type"));
+
+		// limit non positivo: viola @Min(1) -> 400
 		MvcResult result = this.mockMvc.perform(get(Costanti.EVENTI_PATH)
 				 .param("offset", "1")
 				 .param("limit",  "-1")
@@ -269,7 +279,7 @@ class UC_1_FindEventiTest {
         assertNotNull(problem.getString("detail"));
         assertEquals(400, problem.getInt("status"));
         assertEquals("Bad Request", problem.getString("title"));
-        assertEquals("Limit must be > 0", problem.getString("detail"));
+        assertTrue(problem.getString("detail").contains("limit"));
         assertEquals("https://www.rfc-editor.org/rfc/rfc9110.html#name-400-bad-request", problem.getString("type"));
 	}
 }
