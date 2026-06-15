@@ -70,14 +70,23 @@ jobs:
       id: date
       run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
+    - name: Read OWASP plugin version from pom.xml
+      id: owasp
+      run: |
+        VERSION="$(mvn -q -DforceStdout help:evaluate -Dexpression=owasp.plugin.version)"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "OWASP Dependency-Check version: $VERSION"
+
     - name: Cache OWASP Dependency-Check DB
       id: owasp-cache
       uses: actions/cache@v5
       with:
         path: .dependency-check/data
-        key: ${{ runner.os }}-owasp-${{ steps.date.outputs.date }}
+        # Chiave: versione plugin (bump -> cache invalidata per schema diverso)
+        # + data (allineamento con il refresh giornaliero del DB NVD).
+        key: ${{ runner.os }}-owasp-v${{ steps.owasp.outputs.version }}-${{ steps.date.outputs.date }}
         restore-keys: |
-          ${{ runner.os }}-owasp-
+          ${{ runner.os }}-owasp-v${{ steps.owasp.outputs.version }}-
 
     - name: Build War with Maven
       run: mvn clean install -P war -DskipTests -Ddependency-check.skip=true

@@ -1,6 +1,5 @@
 package it.govpay.gde.mapper;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -10,7 +9,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import it.govpay.gde.beans.Evento;
 import it.govpay.gde.entity.DatiPagoPA;
@@ -97,7 +97,7 @@ public interface EventoMapper {
 		try {
 			DatiPagoPA datiPagoPAEntity = objectMapper.readValue(datiPagoPA, DatiPagoPA.class);
 			return eventoEntityDatiPagoPAToEventoDatiPagoPA(datiPagoPAEntity);
-		} catch (IOException ex) {
+		} catch (JacksonException ex) {
 			throw new AttributeConverterException(ex);
 		}
 	}
@@ -109,7 +109,7 @@ public interface EventoMapper {
 		try {
 			DettaglioRichiesta dettaglioRichiestaEntity = objectMapper.readValue(parametriRichiesta, DettaglioRichiesta.class);
 			return eventoEntityDettaglioRichiestaToEventoDettaglioRichiesta(dettaglioRichiestaEntity);
-		} catch (IOException ex) {
+		} catch (JacksonException ex) {
 			throw new AttributeConverterException(ex);
 		}
 	}
@@ -121,7 +121,7 @@ public interface EventoMapper {
 		try {
 			DettaglioRisposta dettaglioRispostaEntity = objectMapper.readValue(parametriRisposta, DettaglioRisposta.class);
 			return eventoEntityDettaglioRispostaToEventoDettaglioRisposta(dettaglioRispostaEntity);
-		} catch (IOException ex) {
+		} catch (JacksonException ex) {
 			throw new AttributeConverterException(ex);
 		}
 	}

@@ -10,7 +10,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -67,13 +66,13 @@ public class GdeController implements EventiApi{
 
 		this.logger.info("Salvataggio evento completato [id={}]", entity.getId());
 		
-		MultiValueMap<String, String> headers = new HttpHeaders();
-		
+		HttpHeaders headers = new HttpHeaders();
+
 		HttpServletRequest curRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
 		headers.add("Location", ListaUtils.createLocation(curRequest, entity.getId()));
-		
-		return new ResponseEntity<>(headers, HttpStatus.CREATED);
+
+		return ResponseEntity.status(HttpStatus.CREATED).headers(headers).build();
 	}
 
 	@Override

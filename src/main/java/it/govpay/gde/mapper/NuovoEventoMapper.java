@@ -8,8 +8,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import it.govpay.gde.beans.NuovoEvento;
 import it.govpay.gde.entity.DatiPagoPA;
@@ -101,7 +101,7 @@ public interface NuovoEventoMapper {
 		ObjectMapper objectMapper = JpaConverterObjectMapperFactory.jpaConverterObjectMapper();
 		try {
 			return objectMapper.writeValueAsString(datiPagoPAEntity);
-		} catch (JsonProcessingException ex) {
+		} catch (JacksonException ex) {
 			throw new AttributeConverterException(ex);
 		}
 	}
@@ -113,7 +113,7 @@ public interface NuovoEventoMapper {
 		ObjectMapper objectMapper = JpaConverterObjectMapperFactory.jpaConverterObjectMapper();
 		try {
 			return objectMapper.writeValueAsBytes(dettaglioRichiestaEntity);
-		} catch (JsonProcessingException ex) {
+		} catch (JacksonException ex) {
 			throw new AttributeConverterException(ex);
 		}
 	}
@@ -125,7 +125,7 @@ public interface NuovoEventoMapper {
 		ObjectMapper objectMapper = JpaConverterObjectMapperFactory.jpaConverterObjectMapper();
 		try {
 			return objectMapper.writeValueAsBytes(dettaglioRispostaEntity	);
-		} catch (JsonProcessingException ex) {
+		} catch (JacksonException ex) {
 			throw new AttributeConverterException(ex);
 		}
 	}

@@ -1,3 +1,50 @@
+2026-06-15  Giuliano Pintori <pintori@link.it>
+
+	* [Build]
+	Avanzamento versione 2.0.0-SNAPSHOT.
+	Aggiornato parent govpay-bom alla versione 2.0.0-SNAPSHOT (Spring Boot 4.1.0,
+	Spring Framework 7.0.8, Spring Data 2026.0.0, Hibernate 7, Jackson 3).
+
+	* [Migrazione]
+	Migrazione a Spring Boot 4.x / Spring Framework 7.x / Jackson 3.
+	Jackson 2 -> Jackson 3 (package tools.jackson): l'ObjectMapper e' ora immutabile
+	e configurato tramite builder. La personalizzazione del mapper primario (formato
+	date, timezone, enum-as-string, serializer/deserializer custom per OffsetDateTime
+	via SimpleModule) e' centralizzata in un bean JsonMapperBuilderCustomizer in
+	WebConfig, cosi' da propagarsi anche ai message converter HTTP. Ripristinata
+	l'inclusione dei campi null nelle risposte (ALWAYS), che Jackson 3 omette per
+	default. Le costanti di feature sono migrate a EnumFeature/DateTimeFeature; le
+	API di lettura/scrittura sollevano l'unchecked JacksonException.
+	Spring Framework 7: org.springframework.lang.Nullable -> JSpecify
+	org.jspecify.annotations.Nullable; HttpHeaders non implementa piu' MultiValueMap
+	(uso di ResponseEntity.status(...).headers(...).build() nel controller).
+	Rimosso spring-boot-starter-hateoas (non utilizzato: il suo converter HAL
+	intercettava application/hal+json alterando null e formato date).
+	springdoc-openapi-ui 1.x -> springdoc-openapi-starter-webmvc-ui 3.x; rimossi
+	javax.annotation-api, webjars swagger-ui esplicito e jackson-datatype-jsr310;
+	swagger-annotations v1 -> io.swagger.core.v3.
+
+	* [Validazione]
+	Con Spring Boot 4 Hibernate Validator e' ora attivo (transitivo dello starter
+	JPA): i vincoli dichiarati nell'OpenAPI (@Min/@Max/@Size/@Pattern) vengono
+	effettivamente applicati. Aggiunto un handler per ConstraintViolationException
+	che risponde 400 (Problem+JSON). Conseguenze sul comportamento: offset negativo
+	ora 400 (prima clampato a 0 -> 200); tipoEvento oltre 255 caratteri ora 400
+	(prima errore DB -> 503).
+
+	* [Test]
+	Lo slice MockMvc/@AutoConfigureMockMvc in Spring Boot 4 e' in un modulo dedicato
+	(spring-boot-webmvc-test): aggiunta la dipendenza di test e aggiornato l'import.
+	Test allineati a Jackson 3 e ai nuovi esiti di validazione (UC_1_16, UC_4_03,
+	UC_4_04).
+
+	* [Sicurezza]
+	Risolte le vulnerabilita' segnalate da OWASP Dependency-Check tramite gli
+	avanzamenti di versione nel BOM (spring-core/spring-web 7.0.8,
+	spring-data-commons 4.1.0, micrometer-core 1.17.0) e l'override del webjar
+	org.webjars:swagger-ui a 5.32.6 (DOMPurify 3.4.0, CVE-2026-41238/41239/41240).
+	Scansione OWASP senza finding.
+
 2026-05-12  Giuliano Pintori <pintori@link.it>
 
 	* [Build]

@@ -17,7 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
@@ -26,11 +26,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.cfg.DateTimeFeature;
+import tools.jackson.databind.cfg.EnumFeature;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
 
 import it.govpay.gde.Application;
 import it.govpay.gde.beans.CategoriaEvento;
@@ -70,18 +70,18 @@ class UC_3_AddEventoTest {
 		sdf.setTimeZone(TimeZone.getTimeZone("Europe/Rome"));
 		sdf.setLenient(false);
 
-		mapper = JsonMapper.builder().build();
+		SimpleModule offsetDateTimeModule = new SimpleModule();
+		offsetDateTimeModule.addSerializer(OffsetDateTime.class, new OffsetDateTimeSerializer());
+		offsetDateTimeModule.addDeserializer(OffsetDateTime.class, new OffsetDateTimeDeserializer());
 
-		JavaTimeModule javaTimeModule = new JavaTimeModule();
-		javaTimeModule.addSerializer(OffsetDateTime.class, new OffsetDateTimeSerializer());
-		javaTimeModule.addDeserializer(OffsetDateTime.class, new OffsetDateTimeDeserializer());
-		mapper.registerModule(javaTimeModule); 
-
-		mapper.enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING);
-		mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-		mapper.enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING);
-		mapper.enable(SerializationFeature.WRITE_DATES_WITH_ZONE_ID); 
-		mapper.setDateFormat(sdf);
+		mapper = JsonMapper.builder()
+				.addModule(offsetDateTimeModule)
+				.enable(EnumFeature.READ_ENUMS_USING_TO_STRING)
+				.disable(DateTimeFeature.WRITE_DATES_AS_TIMESTAMPS)
+				.enable(EnumFeature.WRITE_ENUMS_USING_TO_STRING)
+				.enable(DateTimeFeature.WRITE_DATES_WITH_ZONE_ID)
+				.defaultDateFormat(sdf)
+				.build();
 	}
 
 	@Test
