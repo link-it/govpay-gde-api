@@ -46,6 +46,8 @@
 			</activation>
 			<properties>
 				<packaging.type>jar</packaging.type>
+				<!-- Layout ZIP (PropertiesLauncher): necessario per -Dloader.path=./jdbc-drivers -->
+				<spring-boot.repackage.layout>ZIP</spring-boot.repackage.layout>
 			</properties>
 			<dependencies>
 				<dependency>
@@ -79,6 +81,8 @@
 			<id>war</id>
 			<properties>
 				<packaging.type>war</packaging.type>
+				<!-- Layout WAR: war deployabile su servlet container (WEB-INF/classes, WEB-INF/lib) -->
+				<spring-boot.repackage.layout>WAR</spring-boot.repackage.layout>
 			</properties>
 			<dependencies>
 				<dependency>
@@ -248,7 +252,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<layout>ZIP</layout>
+					<layout>${spring-boot.repackage.layout}</layout>
 					<excludes>
 						<exclude>
 							<groupId>org.postgresql</groupId>
