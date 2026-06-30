@@ -3,6 +3,16 @@
 	* [Build]
 	Avanzamento versione 1.1.4.
 
+	* [Sicurezza]
+	Risolte vulnerabilita' nelle dipendenze gestite transitivamente (scan OSV),
+	tramite override in <dependencyManagement> (le property non si propagano ai
+	progetti figli):
+	- org.apache.tomcat.embed:tomcat-embed-{core,el,websocket} 10.1.54 -> 10.1.55
+	  (include CVE 9.8 GHSA-h6fc-48rj-7qqh e GHSA-r29c-68gh-xp6x);
+	- com.fasterxml.jackson.core:jackson-databind 2.21.1 -> 2.21.4 (via jackson-bom).
+	Nota: GHSA-5jmj-h7xm-6q6v (CVSS 5.3) ha fix in jackson-databind 2.21.5, non
+	ancora pubblicata su Maven Central; resta aperta in attesa del rilascio.
+
 	* [Build][Fix]
 	Corretto il packaging del WAR, corrotto a partire dalla versione 1.1.1 (quando
 	e' stato introdotto il layout ZIP per il supporto a -Dloader.path).
