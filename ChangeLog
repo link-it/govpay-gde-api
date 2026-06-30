@@ -1,5 +1,8 @@
 2026-06-30  Giuliano Pintori <pintori@link.it>
 
+	* [Build]
+	Avanzamento versione 1.1.4.
+
 	* [Build][Fix]
 	Corretto il packaging del WAR, corrotto a partire dalla versione 1.1.1 (quando
 	e' stato introdotto il layout ZIP per il supporto a -Dloader.path).
