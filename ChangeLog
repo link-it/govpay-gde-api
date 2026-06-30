@@ -1,3 +1,20 @@
+2026-06-30  Giuliano Pintori <pintori@link.it>
+
+	* [Build]
+	Avanzamento versione 1.1.4.
+
+	* [Build][Fix]
+	Corretto il packaging del WAR, corrotto a partire dalla versione 1.1.1 (quando
+	e' stato introdotto il layout ZIP per il supporto a -Dloader.path).
+	Il spring-boot-maven-plugin applicava il layout ZIP anche al profilo war: il war
+	prodotto veniva re-impacchettato annidando tutto il contenuto sotto
+	BOOT-INF/classes/WEB-INF/..., rendendolo non deployabile su servlet container
+	(Tomcat non trovava WEB-INF/classes e WEB-INF/lib alla radice).
+	Il layout di repackage e' ora dipendente dal profilo tramite la property
+	spring-boot.repackage.layout: ZIP per il profilo jar (PropertiesLauncher,
+	necessario per -Dloader.path=./jdbc-drivers), WAR per il profilo war
+	(layout deployabile: WEB-INF/classes, WEB-INF/lib, WEB-INF/lib-provided).
+
 2026-05-12  Giuliano Pintori <pintori@link.it>
 
 	* [Build]
