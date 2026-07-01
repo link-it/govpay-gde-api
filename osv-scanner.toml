@@ -1,0 +1,10 @@
+# Configurazione OSV Scanner (google/osv-scanner)
+# Eccezioni alle vulnerabilita' segnalate durante lo scan CI.
+
+[[IgnoredVulns]]
+id = "GHSA-5jmj-h7xm-6q6v"
+# com.fasterxml.jackson.core:jackson-databind (CVSS 5.3):
+# la versione di fix 2.21.5 non e' ancora pubblicata su Maven Central
+# (ultima disponibile 2.21.4, gia' in uso tramite override nel pom).
+# Rimuovere questa eccezione e aggiornare jackson-bom a 2.21.5 appena disponibile.
+reason = "Nessun fix pubblicato: jackson-databind 2.21.5 non ancora su Maven Central (CVSS 5.3, jackson 2.21.4 gia' in uso). Rimuovere all'uscita della 2.21.5."
