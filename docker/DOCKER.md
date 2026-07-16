@@ -201,6 +201,7 @@ networks:
 | `GOVPAY_DS_CONN_PARAM` | No | - | Parametri aggiuntivi connessione JDBC |
 | `GOVPAY_DS_JDBC_LIBS` | No | `/opt/jdbc-drivers` | Percorso driver JDBC |
 | `SERVER_PORT` | No | `10002` | Porta di ascolto API |
+| `MANAGEMENT_SERVER_PORT` | No | porta API | Porta dedicata agli endpoint management (health e metriche Prometheus); se non impostata rispondono sulla porta API |
 | `GOVPAY_GDE_MIN_POOL` | No | `2` | Connessioni idle minime |
 | `GOVPAY_GDE_MAX_POOL` | No | `5` | Dimensione massima pool |
 | `GOVPAY_GDE_JVM_MAX_RAM_PERCENTAGE` | No | `80` | Percentuale massima RAM per JVM |
@@ -235,9 +236,9 @@ Una volta avviato, sono disponibili i seguenti endpoint:
 curl http://localhost:10002/actuator/health
 ```
 
-### Metriche
+### Metriche Prometheus
 ```bash
-curl http://localhost:10002/actuator/metrics
+curl http://localhost:10002/actuator/prometheus
 ```
 
 ### Informazioni
