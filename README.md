@@ -83,6 +83,23 @@ management.endpoints.web.base-path=[Basepath dove esporre i servizi di stato app
 gde.time-zone=[TimeZone dell'applicazione]
 ```
 
+## Configurazione porta Actuator / Prometheus
+
+Gli endpoint `/actuator/health` e `/actuator/prometheus` rispondono di default sulla **stessa porta**
+dell'applicazione (`server.port`). Per esporli su una porta dedicata impostare:
+
+``` bash
+management.server.port=[Porta dedicata per gli endpoint actuator]
+```
+
+oppure, in ambiente Docker, la variabile d'ambiente equivalente:
+
+``` bash
+MANAGEMENT_SERVER_PORT=[Porta dedicata per gli endpoint actuator]
+```
+
+Se non valorizzata, gli endpoint restano sulla porta applicativa.
+
 ## Configurazione connessione al database
 
 Per la configurazione della connessione al database utilizzare le seguenti proprietà:
