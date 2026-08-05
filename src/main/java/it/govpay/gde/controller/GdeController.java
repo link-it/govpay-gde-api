@@ -1,11 +1,10 @@
 package it.govpay.gde.controller;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,33 +20,39 @@ import it.govpay.gde.beans.Evento;
 import it.govpay.gde.beans.ListaEventi;
 import it.govpay.gde.beans.NuovoEvento;
 import it.govpay.gde.beans.PageInfo;
+import it.govpay.gde.beans.PagingMode;
 import it.govpay.gde.beans.RuoloEvento;
 import it.govpay.gde.entity.EventoEntity;
 import it.govpay.gde.exception.ResourceNotFoundException;
 import it.govpay.gde.mapper.EventoMapperImpl;
 import it.govpay.gde.mapper.NuovoEventoMapperImpl;
-import it.govpay.gde.repository.EventoFilters;
 import it.govpay.gde.repository.EventoRepository;
-import it.govpay.gde.repository.LimitOffsetPageRequest;
+import it.govpay.gde.service.EventoSearchQuery;
+import it.govpay.gde.service.EventoSearchResult;
+import it.govpay.gde.service.EventoSearchService;
 import it.govpay.gde.utils.ListaUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @Controller
 public class GdeController implements EventiApi{
-	
+
 	private Logger logger = LoggerFactory.getLogger(GdeController.class);
-	
+
 	private EventoRepository eventoRepository;
-	
+
 	private NuovoEventoMapperImpl nuovoEventoMapperImpl;
-	
+
 	private EventoMapperImpl eventoMapperImpl;
-	
-	public GdeController(EventoRepository eventoRepository, NuovoEventoMapperImpl nuovoEventoMapperImpl, EventoMapperImpl eventoMapperImpl) {
+
+	private EventoSearchService eventoSearchService;
+
+	public GdeController(EventoRepository eventoRepository, NuovoEventoMapperImpl nuovoEventoMapperImpl,
+			EventoMapperImpl eventoMapperImpl, EventoSearchService eventoSearchService) {
 		this.eventoRepository = eventoRepository;
 		this.nuovoEventoMapperImpl = nuovoEventoMapperImpl;
 		this.eventoMapperImpl = eventoMapperImpl;
+		this.eventoSearchService = eventoSearchService;
     }
 
 	@Override
@@ -78,116 +83,35 @@ public class GdeController implements EventiApi{
 	@Override
 	public ResponseEntity<ListaEventi> findEventi(Long offset,
 			Integer limit, OffsetDateTime dataDa, OffsetDateTime dataA,
-			String idDominio, String iuv, String ccp,
+			List<String> idDominio, String iuv, String ccp,
 			String idA2A, String idPendenza, CategoriaEvento categoriaEvento,
 			EsitoEvento esito, RuoloEvento ruolo, String sottotipoEvento, String tipoEvento,
-			ComponenteEvento componente, Integer severitaDa, Integer severitaA) {
-		
-		this.logger.debug("Ricerca eventi...");
-		
-		Specification<EventoEntity> spec = creaFiltriDiRicercaDate(dataDa, dataA);
-		
-		spec = creaFiltriDiRicercaEvento(spec, categoriaEvento, esito, ruolo, sottotipoEvento, tipoEvento, componente);
+			ComponenteEvento componente, Integer severitaDa, Integer severitaA,
+			String messaggi, Boolean total, PagingMode pagingMode,
+			OffsetDateTime cursorData, Long cursorId) {
 
-		spec = creaFiltriDiRicercaDatiPendenza(spec, idDominio, iuv, ccp, idA2A, idPendenza);
-		
-		spec = creaFiltriDiRicercaSeverita(spec, severitaDa, severitaA);
-		
-		LimitOffsetPageRequest pageRequest = new LimitOffsetPageRequest(offset, limit, EventoFilters.sort());
-		
-		Page<EventoEntity> eventi = this.eventoRepository.findAll(spec, pageRequest.pageable);
-		
-		PageInfo pageInfo = new PageInfo(offset,limit);
-		pageInfo.setTotal(eventi.getTotalElements()); 
-		
-		ListaEventi ret = ListaUtils.buildPaginatedList(eventi, pageRequest.limit, new ListaEventi(pageInfo, null));
-		
-		for (EventoEntity user : eventi) {
-			ret.addItemsItem(this.eventoMapperImpl.eventoEntityToEvento(user));
+		this.logger.debug("Ricerca eventi [pagingMode={}, total={}]...", pagingMode, total);
+
+		EventoSearchQuery query = new EventoSearchQuery(offset, limit, dataDa, dataA, idDominio, iuv, ccp,
+				idA2A, idPendenza, categoriaEvento, esito, ruolo, sottotipoEvento, tipoEvento, componente,
+				severitaDa, severitaA, messaggi, Boolean.TRUE.equals(total), pagingMode, cursorData, cursorId);
+
+		EventoSearchResult result = this.eventoSearchService.search(query);
+
+		PageInfo pageInfo = query.isCursorMode()
+				? new PageInfo(0L, query.limitOrDefault())
+				: new PageInfo(query.offsetOrDefault(), query.limitOrDefault());
+		pageInfo.setHasNext(result.hasNext());
+		pageInfo.setTotal(result.total());
+
+		ListaEventi ret = new ListaEventi(pageInfo, null);
+		for (EventoEntity evento : result.items()) {
+			ret.addItemsItem(this.eventoMapperImpl.eventoEntityToEvento(evento));
 		}
-		
-		this.logger.debug("Ricerca eventi completata [trovati={}]", eventi.getTotalElements());
-		
+
+		this.logger.debug("Ricerca eventi completata [trovati={}, hasNext={}]", result.items().size(), result.hasNext());
+
 		return ResponseEntity.ok(ret);
-	}
-	
-	private Specification<EventoEntity> creaFiltriDiRicercaDate(OffsetDateTime dataDa, OffsetDateTime dataA) {
-		Specification<EventoEntity> spec = EventoFilters.empty();
-		
-		if(dataDa != null) {
-			spec = spec.and(EventoFilters.byDataDa(dataDa));
-		}
-		if(dataA != null) {
-			spec = spec.and(EventoFilters.byDataA(dataA));
-		}
-		return spec;
-	}
-
-	private Specification<EventoEntity> creaFiltriDiRicercaEvento(Specification<EventoEntity> spec, CategoriaEvento categoriaEvento, EsitoEvento esito,
-			RuoloEvento ruolo, String sottotipoEvento, String tipoEvento, ComponenteEvento componente) {
-		
-		if (spec == null) {
-			spec = EventoFilters.empty();
-		}
-		
-		if(tipoEvento != null) {
-			spec = spec.and(EventoFilters.byTipoEvento(tipoEvento));
-		}
-		if(sottotipoEvento != null) {
-			spec = spec.and(EventoFilters.bySottotipoEvento(sottotipoEvento));
-		}
-		if(componente != null) {
-			spec = spec.and(EventoFilters.byComponenteEvento(componente));
-		}
-		if(categoriaEvento != null) {
-			spec = spec.and(EventoFilters.byCategoriaEvento(categoriaEvento));
-		}
-		if(esito != null) {
-			spec = spec.and(EventoFilters.byEsitoEvento(esito));
-		}
-		if(ruolo != null) {
-			spec = spec.and(EventoFilters.byRuoloEvento(ruolo));
-		}
-		return spec;
-	}
-	
-	private Specification<EventoEntity> creaFiltriDiRicercaDatiPendenza(Specification<EventoEntity> spec, String idDominio,
-			String iuv, String ccp, String idA2A, String idPendenza) {
-		if (spec == null) {
-			spec = EventoFilters.empty();
-		}
-		
-		if(idDominio != null) {
-			spec = spec.and(EventoFilters.byIdDominio(idDominio));
-		}
-		if(iuv != null) {
-			spec = spec.and(EventoFilters.byIuv(iuv));
-		}
-		if(ccp != null) {
-			spec = spec.and(EventoFilters.byCcp(ccp));
-		}
-		if(idA2A != null) {
-			spec = spec.and(EventoFilters.byIdA2A(idA2A));
-		}
-		if(idPendenza != null) {
-			spec = spec.and(EventoFilters.byIdPendenza(idPendenza));
-		}
-		return spec;
-	}
-	
-	private Specification<EventoEntity> creaFiltriDiRicercaSeverita(Specification<EventoEntity> spec, Integer severitaDa, Integer severitaA) {
-		
-		if (spec == null) {
-			spec = EventoFilters.empty();
-		}
-		
-		if(severitaDa != null) {
-			spec = spec.and(EventoFilters.bySeveritaDa(severitaDa));
-		}
-		if(severitaA != null) {
-			spec = spec.and(EventoFilters.bySeveritaA(severitaA));
-		}
-		return spec;
 	}
 
 	@Override
