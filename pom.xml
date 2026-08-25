@@ -11,7 +11,7 @@
 	</parent>
 	<groupId>it.govpay.gde</groupId>
 	<artifactId>gde-api</artifactId>
-	<version>2.0.0</version>
+	<version>2.0.1-SNAPSHOT</version>
 	<packaging>${packaging.type}</packaging>
 	<name>GovPay - Giornale degli Eventi - API</name>
 	<description>GovPay Modulo per la registrazione degli eventi</description>
