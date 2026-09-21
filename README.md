@@ -143,3 +143,38 @@ docker pull linkitaly/govpay-gde-api:latest
 ```
 
 Per la documentazione completa sull'utilizzo dell'immagine Docker consultare il file [docker/DOCKER.md](docker/DOCKER.md).
+
+## Reperire il war per il deploy su application server
+
+Il war è prodotto da ogni build della pipeline, insieme al jar. Dove recuperarlo dipende
+da cosa è stato costruito:
+
+| Origine | Dove si trova |
+|---------|---------------|
+| Release (tag) | Allegato alla [release GitHub](https://github.com/link-it/govpay-gde-api/releases) come `govpay-gde-api-<tag>.war` |
+| Sviluppo (push su `main`, versione SNAPSHOT) | Nell'immagine `linkitaly/govpay-gde-api-dev:<versione>`, in `/opt/govpay-gde/dist/govpay-gde-api.war` |
+| Qualsiasi build | Artifact `govpay-gde-api` della run di GitHub Actions (retention 90 giorni) |
+
+Sulle versioni SNAPSHOT non esiste una release a cui il war sia allegato: viene quindi
+incluso nell'immagine Docker di sviluppo, pubblicata a ogni push su `main`. Il war non è
+usato a runtime dal container, che avvia il jar, ed è presente solo per essere estratto:
+
+``` bash
+# Creare un container senza avviarlo, copiare il war e rimuovere il container
+id=$(docker create linkitaly/govpay-gde-api-dev:2.0.1-SNAPSHOT)
+docker cp "${id}:/opt/govpay-gde/dist/govpay-gde-api.war" ./govpay-gde-api.war
+docker rm "${id}"
+```
+
+La versione da usare come tag dell'immagine è quella del `pom.xml` sul branch `main`:
+
+``` bash
+mvn -q -DforceStdout help:evaluate -Dexpression=project.version
+```
+
+Per costruire il war in locale, senza passare dalla pipeline:
+
+``` bash
+mvn clean install -P war
+# prodotto in target/govpay-gde-api.war
+```
