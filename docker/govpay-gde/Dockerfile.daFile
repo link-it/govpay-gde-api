@@ -31,6 +31,13 @@ WORKDIR ${GOVPAY_GDE_HOME}
 # Copy GDE JAR from local build context
 COPY *.jar /opt/govpay-gde/govpay-gde-api.jar
 
+# Il war non serve a runtime (l'entrypoint avvia il jar): viene incluso per
+# poterlo estrarre dall'immagine con 'docker cp' in fase di sviluppo, quando
+# non esiste una release GitHub a cui sia allegato.
+# La directory dist/ del build context e' sempre creata dagli script di build,
+# anche vuota, perche' i build locali dal solo jar non producono un war.
+COPY dist/ /opt/govpay-gde/dist/
+
 
 # Copy entrypoint and initialization scripts
 COPY commons/entrypoint.sh /usr/local/bin/

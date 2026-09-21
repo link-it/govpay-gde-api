@@ -66,6 +66,10 @@ done
 rm -rf buildcontext
 mkdir -p buildcontext/
 cp -fr commons buildcontext/
+# Dockerfile.daFile copia dist/ nell'immagine: la directory deve esistere anche
+# quando non c'e' nessun war da includere (vedi COPY dist/ nel Dockerfile).
+mkdir -p buildcontext/dist
+touch buildcontext/dist/.keep
 
 DOCKERBUILD_OPT=()
 DOCKERBUILD_OPTS=(${DOCKERBUILD_OPTS[@]} '--build-arg' "govpay_gde_fullversion=${VER:-${LATEST_GOVPAY_GDE_RELEASE}}")

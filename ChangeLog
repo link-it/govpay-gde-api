@@ -1,3 +1,15 @@
+2026-09-21  Giuliano Pintori <pintori@link.it>
+
+	* [Build]
+	Il war prodotto dalla build e' ora incluso nell'immagine Docker di
+	sviluppo, in /opt/govpay-gde/dist/govpay-gde-api.war, e si estrae con
+	'docker cp'. Su tag il war e' allegato alla release GitHub, mentre sui
+	push su main l'unico recapito era l'artifact della run: l'immagine di
+	sviluppo lo rende disponibile insieme al jar gia' pubblicato.
+	Dockerfile.daFile copia la directory dist/ del build context, che
+	build_image.sh e il job docker-dev creano sempre, anche vuota, per non
+	rompere i build locali dal solo jar.
+
 2026-09-03  Giuliano Pintori <pintori@link.it>
 
 	* [Build]

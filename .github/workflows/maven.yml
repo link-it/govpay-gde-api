@@ -318,6 +318,9 @@ jobs:
   # nel repo delle immagini di produzione.
   # Usa Dockerfile.daFile, che prende il jar dal build context: Dockerfile.github
   # scarica il jar da una GitHub release, che per una SNAPSHOT non esiste.
+  # Nell'immagine viene incluso anche il war, in /opt/govpay-gde/dist, per
+  # renderlo disponibile in fase di sviluppo: su tag il war e' allegato alla
+  # release, su main l'unico recapito e' l'artifact della run.
   docker-dev:
     runs-on: ubuntu-latest
     needs: build
@@ -356,10 +359,13 @@ jobs:
         set -euo pipefail
         cd docker
         rm -rf buildcontext
-        mkdir -p buildcontext/
+        mkdir -p buildcontext/dist
         cp -fr commons buildcontext/
         cp -f ../artifacts/govpay-gde-api.jar buildcontext/
-        ls -lh buildcontext/
+        # Il war di una SNAPSHOT non finisce in nessuna release: viene incluso
+        # nell'immagine di sviluppo, da cui si estrae con 'docker cp'.
+        cp -f ../artifacts/govpay-gde-api.war buildcontext/dist/
+        ls -lh buildcontext/ buildcontext/dist/
 
     - name: Build and push development image
       if: ${{ endsWith(needs.build.outputs.version, '-SNAPSHOT') }}
