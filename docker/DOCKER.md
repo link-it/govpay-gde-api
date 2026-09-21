@@ -266,6 +266,27 @@ JAVA_OPTS=-XX:+UseG1GC -XX:MaxGCPauseMillis=100
 GOVPAY_GDE_JVM_MAX_RAM_PERCENTAGE=90
 ```
 
+## War per il deploy su application server
+
+L'immagine di sviluppo `linkitaly/govpay-gde-api-dev:<versione>` contiene, oltre
+al jar avviato dall'entrypoint, anche il war prodotto dalla stessa build, in
+`/opt/govpay-gde/dist/govpay-gde-api.war`. Serve a provare il deploy su
+application server partendo da una SNAPSHOT, quando non esiste ancora una
+release GitHub a cui il war sia allegato.
+
+Per estrarlo:
+
+```bash
+# Creare un container senza avviarlo e copiare il war
+id=$(docker create linkitaly/govpay-gde-api-dev:2.0.0-SNAPSHOT)
+docker cp "${id}:/opt/govpay-gde/dist/govpay-gde-api.war" ./govpay-gde-api.war
+docker rm "${id}"
+```
+
+In alternativa, il war di ogni build e' scaricabile dall'artifact
+`govpay-gde-api` della run di GitHub Actions (retention 90 giorni), mentre sui
+tag e' allegato alla release come `govpay-gde-api-<tag>.war`.
+
 ## Struttura File
 
 ```
