@@ -1,3 +1,27 @@
+2026-09-24  Giuliano Pintori <pintori@link.it>
+
+	* [Logging] Transaction ID e Correlation ID (BP-LOG-3).
+	Introdotta la dipendenza da govpay-common per la sola tracciatura delle
+	richieste: ogni risposta porta un transaction id generato dal componente
+	(UUID v4, mai accettato dall'esterno) su X-Transaction-ID e
+	X-Govpay-IdTransazione, e un correlation id letto da X-Correlation-ID o
+	X-Request-ID, generato se assente, su entrambi gli header di correlazione.
+	I due identificativi sono nell'MDC e nel pattern di log, cosi' un evento
+	scritto sul giornale e' correlabile ai log del componente che lo ha inviato.
+	Le altre autoconfigurazioni della libreria restano inattive: le metriche
+	custom richiedono govpay.metrics.enabled, il JobRepository batch richiede
+	spring-batch (dipendenza optional, assente qui) e i livelli di log dinamici
+	richiedono un ConfigurazioneService, che gde-api non espone perche' non
+	insiste sulla base dati di GovPay.
+
+	* [Logging] Esposizione di /actuator/loggers configurabile.
+	management.endpoints.web.exposure.include passa da valore fisso a
+	${MANAGEMENT_ENDPOINTS:health,prometheus}: il default non cambia. 'loggers'
+	non e' incluso di default perche' qui actuator risponde sulla porta
+	applicativa e il componente non ha Spring Security: sarebbe un endpoint di
+	scrittura non autenticato (BP-SEC-2). Va abilitato solo insieme a una porta
+	management dedicata e segregata in rete.
+
 2026-09-21  Giuliano Pintori <pintori@link.it>
 
 	* [Build]

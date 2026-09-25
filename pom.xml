@@ -28,6 +28,9 @@
 
 		<wagon-ssh-external.version>3.5.3</wagon-ssh-external.version>
 
+		<!-- govpay-common (not in BOM) -->
+		<govpay-common.version>2.0.4-SNAPSHOT</govpay-common.version>
+
 		<owasp.falsePositives.dir>src/main/resources/owasp/falsePositives</owasp.falsePositives.dir>
 		<!-- owasp config -->
 		<owasp>verify</owasp> <!-- owasp phase, use 'none' for disable -->
@@ -142,6 +145,28 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+
+		<!--
+			govpay-common: qui serve per la tracciatura di transaction id e
+			correlation id (BP-LOG-3), registrata da LoggingAutoConfiguration.
+			Le altre autoconfigurazioni della libreria restano inattive: le
+			metriche custom richiedono govpay.metrics.enabled, il JobRepository
+			batch richiede spring-batch (dipendenza optional, assente qui) e i
+			livelli di log dinamici richiedono un ConfigurazioneService, che
+			gde-api non espone perche' non insiste sulla base dati di GovPay.
+			Esclusione di spring-boot-starter-logging come per starter-web sopra.
+		-->
+		<dependency>
+			<groupId>org.gov4j.govpay</groupId>
+			<artifactId>govpay-common</artifactId>
+			<version>${govpay-common.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-logging</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
