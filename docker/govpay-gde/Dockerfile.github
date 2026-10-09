@@ -1,6 +1,9 @@
 FROM eclipse-temurin:25-jre-alpine
 
 ARG govpay_gde_fullversion
+# sha256 del jar della release: la pipeline lo calcola dall'artifact della
+# build, build_image.sh lo legge dalle API delle release di GitHub.
+ARG govpay_gde_sha256
 ARG govpay_gde_home=/opt/govpay-gde
 ARG govpay_gde_log=/var/log/govpay-gde
 
@@ -28,9 +31,13 @@ chown -R govpay:govpay ${GOVPAY_GDE_HOME} ${GOVPAY_GDE_LOGDIR} /opt/sql
 
 WORKDIR ${GOVPAY_GDE_HOME}
 
-# Download GDE JAR from GitHub release
+# Download GDE JAR from GitHub release, con verifica del certificato e del
+# checksum: senza checksum l'immagine conterrebbe qualunque file venisse
+# servito a quell'indirizzo.
 RUN set -eux; \
-curl -kL -sS -q -o /opt/govpay-gde/govpay-gde-api.jar  "https://github.com/link-it/govpay-gde-api/releases/download/${GOVPAY_GDE_FULLVERSION}/govpay-gde-api-${GOVPAY_GDE_FULLVERSION}.jar";
+test -n "${govpay_gde_sha256}" || { echo "Manca il build-arg govpay_gde_sha256 (sha256 del jar della release)"; exit 1; }; \
+curl -fL -sS -o /opt/govpay-gde/govpay-gde-api.jar "https://github.com/link-it/govpay-gde-api/releases/download/${GOVPAY_GDE_FULLVERSION}/govpay-gde-api-${GOVPAY_GDE_FULLVERSION}.jar"; \
+echo "${govpay_gde_sha256}  /opt/govpay-gde/govpay-gde-api.jar" | sha256sum -c -
 
 
 # Copy entrypoint and initialization scripts

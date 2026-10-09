@@ -11,6 +11,7 @@ echo "Options
 Sorgente:
 -v <VERSIONE>  : Imposta la versione della release binaria da utilizzare per il build (default: ${LATEST_GOVPAY_GDE_RELEASE})
 -l <FILE>      : Usa un'installer binario sul filesystem locale
+-s <SHA256>    : sha256 del jar della release (default: letto dalle API delle release di GitHub)
 
 Personalizzazioni:
 -e <PATH>      : Imposta il path interno utilizzato per i file di configurazione di govpay 
@@ -32,6 +33,7 @@ TAG=
 VER=
 DB=
 LOCALFILE=
+SHA256=
 TEMPLATE=
 ARCHIVI=
 CUSTOM_MANAGER=
@@ -42,7 +44,7 @@ REGISTRY_PREFIX=linkitaly
 LATEST_LINK="$(curl -qw '%{redirect_url}\n' https://github.com/link-it/govpay-gde-api/releases/latest 2> /dev/null)"
 LATEST_GOVPAY_GDE_RELEASE="${LATEST_LINK##*/}"
 
-while getopts "ht:v:l:e:f:" opt; do
+while getopts "ht:v:l:e:f:s:" opt; do
   case $opt in
     t) TAG="$OPTARG"; NO_COLON=${TAG//:/}
       [ ${#TAG} -eq ${#NO_COLON} -o "${TAG:0:1}" == ':' -o "${TAG:(-1):1}" == ':' ] && { echo "Il tag fornito \"$TAG\" non utilizza la sintassi <repository>:<tagname>"; exit 2; } ;;
@@ -50,6 +52,7 @@ while getopts "ht:v:l:e:f:" opt; do
     l) LOCALFILE="$OPTARG"
         [ ! -f "${LOCALFILE}" ] && { echo "Il file indicato non esiste o non e' raggiungibile [${LOCALFILE}]."; exit 3; } 
        ;;
+    s) SHA256="${OPTARG}" ;;
     e) CUSTOM_GOVPAY_HOME="${OPTARG}" ;;
     f) CUSTOM_GOVPAY_LOG="${OPTARG}" ;;
     h) printHelp
@@ -89,6 +92,16 @@ then
   cp -f "${LOCALFILE}" buildcontext/
 else
   DOCKERFILE="govpay-gde/Dockerfile.github"
+  # Dockerfile.github verifica il jar scaricato: il checksum atteso e' il
+  # digest dell'asset della release, che GitHub calcola al caricamento.
+  RELEASE="${VER:-${LATEST_GOVPAY_GDE_RELEASE}}"
+  if [ -z "${SHA256}" ]
+  then
+    SHA256="$(curl -fsS "https://api.github.com/repos/link-it/govpay-gde-api/releases/tags/${RELEASE}" \
+      | python3 -c "import json,sys; a=[x for x in json.load(sys.stdin)['assets'] if x['name']=='govpay-gde-api-${RELEASE}.jar']; print(a[0]['digest'].split(':',1)[1] if a and a[0].get('digest') else '')" 2>/dev/null)"
+  fi
+  [ -z "${SHA256}" ] && { echo "Impossibile ricavare lo sha256 del jar della release ${RELEASE}: indicarlo con -s."; exit 4; }
+  DOCKERBUILD_OPTS=(${DOCKERBUILD_OPTS[@]} '--build-arg' "govpay_gde_sha256=${SHA256}")
 fi
 
 

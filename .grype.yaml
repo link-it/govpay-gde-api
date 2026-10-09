@@ -1,0 +1,11 @@
+# Eccezioni per il report di Grype (docker/scan_image.sh), da tenere allineate
+# a quelle di .trivyignore.yaml, dove stanno motivo e scadenza: Grype produce
+# solo un report e non ha un gate, quindi qui basta l'elenco.
+#
+# Esempio:
+#   ignore:
+#     - vulnerability: CVE-2026-00000
+#       package:
+#         name: libreria
+
+ignore: []
