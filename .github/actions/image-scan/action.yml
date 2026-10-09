@@ -47,8 +47,12 @@ runs:
 
     # I database di Trivy e Grype pesano centinaia di MB e si aggiornano ogni
     # giorno: chiave per giorno, con ripiego sull'ultimo disponibile.
-    - name: Cache dei database delle vulnerabilita'
-      uses: actions/cache@v5
+    # Ripristino e salvataggio sono separati perche' actions/cache salva solo a
+    # job riuscito: con il gate fallito la cache non verrebbe mai scritta, e
+    # proprio le run bloccate, che si rilanciano, riscaricherebbero tutto.
+    - name: Ripristino della cache dei database delle vulnerabilita'
+      id: cache
+      uses: actions/cache/restore@v5
       with:
         path: ~/.cache/govpay-image-scan
         key: image-scan-db-${{ runner.os }}-${{ steps.date.outputs.date }}
@@ -71,6 +75,13 @@ runs:
         [ -f image-scan-report/gate.txt ] && cat image-scan-report/gate.txt >> "$GITHUB_OUTPUT"
         echo "rc=${rc}" >> "$GITHUB_OUTPUT"
         [ "${rc}" -le 1 ]
+
+    - name: Salvataggio della cache dei database delle vulnerabilita'
+      if: ${{ always() && steps.cache.outputs.cache-hit != 'true' && hashFiles('image-scan-report/trivy-report.json') != '' }}
+      uses: actions/cache/save@v5
+      with:
+        path: ~/.cache/govpay-image-scan
+        key: image-scan-db-${{ runner.os }}-${{ steps.date.outputs.date }}
 
     - name: Report come artifact
       if: ${{ always() }}
