@@ -93,14 +93,14 @@ runs:
 
     - name: Report Trivy nella scheda Security
       if: ${{ always() && hashFiles('image-scan-report/trivy-report.sarif') != '' }}
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: image-scan-report/trivy-report.sarif
         category: image-trivy
 
     - name: Report Grype nella scheda Security
       if: ${{ always() && hashFiles('image-scan-report/grype-report.sarif') != '' }}
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: image-scan-report/grype-report.sarif
         category: image-grype
