@@ -318,6 +318,16 @@ I report finiscono in `./image-scan-report` (`SCAN_OUT_DIR` per cambiarla): `rie
 
 **Deroga temporanea.** Se un rilascio urgente e' bloccato da una vulnerabilita' appena pubblicata e non correggibile in tempi brevi, la variabile di repository `IMAGE_SCAN_GATE=warn` porta il gate in sola segnalazione: viene valutato e riportato, ma l'immagine viene pubblicata. La deroga va motivata in una issue e la variabile rimossa subito dopo il rilascio.
 
+### Pacchetti dell'immagine
+
+Oltre alla base `eclipse-temurin:25-jre-alpine`, l'immagine installa solo `bash` (per l'entrypoint) e `tzdata`. `curl`, `tar`, `unzip` e `netcat-openbsd` non ci sono: l'entrypoint non li usa, e ogni pacchetto in piu' e' superficie esposta. Per una verifica dall'interno del container c'e' il `wget` di busybox, lo stesso usato dagli healthcheck:
+
+```bash
+docker exec <container> wget -q -O - http://localhost:10002/actuator/health
+```
+
+Le segnalazioni di Grype su `coreutils` e `busybox`, pacchetti della base senza correzione in Alpine, sono eccezioni motivate in `.grype.yaml`.
+
 ### Checksum del jar
 
 `Dockerfile.github` scarica il jar dalla release GitHub con verifica del certificato e del checksum, passato con il build-arg `govpay_gde_sha256`: in pipeline e' calcolato dall'artifact della build, `build_image.sh` lo legge dal digest dell'asset nelle API delle release (opzione `-s` per indicarlo a mano).
