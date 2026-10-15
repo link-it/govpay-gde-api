@@ -321,10 +321,17 @@ jobs:
   # Nell'immagine viene incluso anche il war, in /opt/govpay-gde/dist, per
   # renderlo disponibile in fase di sviluppo: su tag il war e' allegato alla
   # release, su main l'unico recapito e' l'artifact della run.
+  # Sulle pull request l'immagine viene costruita e scansionata ma non
+  # pubblicata: il gate si vede gia' in revisione, prima del merge.
   docker-dev:
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+    if: ${{ (github.event_name == 'push' && github.ref_name == 'main') || github.event_name == 'pull_request' }}
+    # security-events: report SARIF della scansione dell'immagine.
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
 
     steps:
     - name: Skip (not a SNAPSHOT)
@@ -347,7 +354,7 @@ jobs:
       uses: docker/setup-buildx-action@v4
 
     - name: Login to Docker Hub
-      if: ${{ endsWith(needs.build.outputs.version, '-SNAPSHOT') }}
+      if: ${{ endsWith(needs.build.outputs.version, '-SNAPSHOT') && github.event_name == 'push' }}
       uses: docker/login-action@v4
       with:
         username: ${{ vars.DOCKERHUB_USERNAME }}
@@ -367,17 +374,34 @@ jobs:
         cp -f ../artifacts/govpay-gde-api.war buildcontext/dist/
         ls -lh buildcontext/ buildcontext/dist/
 
-    - name: Build and push development image
+    # L'immagine viene costruita senza pubblicarla, scansionata, e pubblicata
+    # solo se supera il gate (vedi .github/actions/image-scan). Su main la
+    # scansione fa da preavviso: un problema emerge qui, giorni prima del tag.
+    - name: Build development image
       if: ${{ endsWith(needs.build.outputs.version, '-SNAPSHOT') }}
       uses: docker/build-push-action@v6
       with:
         context: docker/buildcontext
         file: docker/govpay-gde/Dockerfile.daFile
-        push: true
+        push: false
+        load: true
+        pull: true
         build-args: |
           govpay_gde_fullversion=${{ needs.build.outputs.version }}
         tags: |
           linkitaly/govpay-gde-api-dev:${{ needs.build.outputs.version }}
+
+    - name: Scan development image
+      if: ${{ endsWith(needs.build.outputs.version, '-SNAPSHOT') }}
+      uses: ./.github/actions/image-scan
+      with:
+        image: linkitaly/govpay-gde-api-dev:${{ needs.build.outputs.version }}
+        gate: ${{ vars.IMAGE_SCAN_GATE || 'block' }}
+        report-name: image-scan-report-dev
+
+    - name: Push development image
+      if: ${{ endsWith(needs.build.outputs.version, '-SNAPSHOT') && github.event_name == 'push' }}
+      run: docker push "linkitaly/govpay-gde-api-dev:${{ needs.build.outputs.version }}"
 
   release:
     runs-on: ubuntu-latest
@@ -481,10 +505,33 @@ jobs:
     runs-on: ubuntu-latest
     needs: release
     if: startsWith(github.ref, 'refs/tags/')
+    # contents: write per allegare i report della scansione alla release;
+    # security-events: write per i report SARIF.
+    permissions:
+      contents: write
+      actions: read
+      security-events: write
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
+
+    # Il jar dell'artifact e' lo stesso file allegato alla release (il job
+    # release lo copia rinominandolo): il suo sha256 e' quello che il
+    # Dockerfile verifica dopo averlo scaricato.
+    - name: Download jar from build job
+      uses: actions/download-artifact@v7
+      with:
+        name: govpay-gde-api
+        path: artifacts/
+
+    - name: Checksum del jar
+      id: checksum
+      run: |
+        set -euo pipefail
+        SHA256="$(sha256sum artifacts/govpay-gde-api.jar | cut -d' ' -f1)"
+        echo "sha256=${SHA256}" >> "$GITHUB_OUTPUT"
+        echo "sha256 del jar: ${SHA256}"
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -506,14 +553,67 @@ jobs:
         mkdir -p buildcontext/
         cp -fr commons buildcontext/
 
-    - name: Build and push Docker image
+    # L'immagine viene costruita senza pubblicarla, scansionata, e pubblicata
+    # solo se supera il gate (vedi .github/actions/image-scan): un'immagine di
+    # release, una volta pubblicata, non viene piu' toccata.
+    - name: Build Docker image
       uses: docker/build-push-action@v6
       with:
         context: docker/buildcontext
         file: docker/govpay-gde/Dockerfile.github
-        push: true
+        push: false
+        load: true
+        pull: true
         build-args: |
           govpay_gde_fullversion=${{ steps.version.outputs.VERSION }}
+          govpay_gde_sha256=${{ steps.checksum.outputs.sha256 }}
         tags: |
           linkitaly/govpay-gde-api:${{ steps.version.outputs.VERSION }}
           linkitaly/govpay-gde-api:latest
+
+    - name: Scan Docker image
+      uses: ./.github/actions/image-scan
+      with:
+        image: linkitaly/govpay-gde-api:${{ steps.version.outputs.VERSION }}
+        gate: ${{ vars.IMAGE_SCAN_GATE || 'block' }}
+        report-name: image-scan-report
+
+    # Anche con il gate fallito: i report spiegano perche' l'immagine non c'e'.
+    - name: Allega i report della scansione alla release
+      if: ${{ always() && hashFiles('image-scan-report/riepilogo.md') != '' }}
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        set -euo pipefail
+        ZIP="image-scan-report-${{ steps.version.outputs.VERSION }}.zip"
+        zip -r "${ZIP}" image-scan-report/
+        gh release upload "${{ steps.version.outputs.VERSION }}" "${ZIP}" --clobber
+
+    - name: Push Docker image
+      run: |
+        set -euo pipefail
+        docker push "linkitaly/govpay-gde-api:${{ steps.version.outputs.VERSION }}"
+        docker push "linkitaly/govpay-gde-api:latest"
+
+    # SBOM dell'immagine (sistema operativo, JRE e librerie) su
+    # Dependency-Track, accanto a quello Maven caricato dal job
+    # dependency-track-upload. Non blocca: l'immagine e' gia' pubblicata.
+    - name: Upload SBOM dell'immagine su Dependency-Track
+      if: ${{ vars.DISABLE_DTRACK_UPLOAD_JOB != 'true' }}
+      continue-on-error: true
+      env:
+        DTRACK_API_KEY: ${{ secrets.GOVPAY_DTRACK_API_KEY }}
+        DTRACK_PROJECT_NAME: govpay-gde-api-image
+        DTRACK_VERSION: ${{ steps.version.outputs.VERSION }}
+        DTRACK_LATEST: 'true'
+      run: |
+        set -euo pipefail
+        if [ -z "${DTRACK_API_KEY}" ]; then
+          echo "::warning::secret GOVPAY_DTRACK_API_KEY non configurato: SBOM dell'immagine non caricato."
+          exit 0
+        fi
+        chmod +x script/sbom/upload-sbom-parent-required.sh
+        ./script/sbom/upload-sbom-parent-required.sh \
+          "${DTRACK_API_KEY}" \
+          image-scan-report/sbom-image.cdx.json \
+          "GovPay-Backend"
