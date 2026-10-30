@@ -26,7 +26,7 @@ Operazioni esposte (specifica in [src/main/resources/openapi.yaml](src/main/reso
 
 Il servizio non applica autenticazione: va esposto solo sulla rete interna dei componenti GovPay.
 
-## Componenti della galassia GovPay
+## Integrazione con GovPay
 
 | Componente | Quando serve | Obbligatorio | Ruolo |
 |------------|--------------|--------------|-------|
