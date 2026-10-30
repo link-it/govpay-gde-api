@@ -191,26 +191,7 @@ networks:
 
 ### Variabili d'Ambiente
 
-| Variabile | Richiesta | Predefinito | Descrizione |
-|----------|----------|---------|-------------|
-| `GOVPAY_DB_TYPE` | Sì | - | Tipo di database (postgresql, mysql, mariadb, oracle) |
-| `GOVPAY_DB_SERVER` | Sì | - | Server database (formato: host:porta) |
-| `GOVPAY_DB_NAME` | Sì | - | Nome del database |
-| `GOVPAY_DB_USER` | Sì | - | Username del database |
-| `GOVPAY_DB_PASSWORD` | Sì | - | Password del database |
-| `GOVPAY_DS_CONN_PARAM` | No | - | Parametri aggiuntivi connessione JDBC |
-| `GOVPAY_DS_JDBC_LIBS` | No | `/opt/jdbc-drivers` | Percorso driver JDBC |
-| `SERVER_PORT` | No | `10002` | Porta di ascolto API |
-| `MANAGEMENT_SERVER_PORT` | No | porta API | Porta dedicata agli endpoint management (health e metriche Prometheus); se non impostata rispondono sulla porta API |
-| `GOVPAY_GDE_MIN_POOL` | No | `2` | Connessioni idle minime |
-| `GOVPAY_GDE_MAX_POOL` | No | `5` | Dimensione massima pool |
-| `GOVPAY_GDE_JVM_MAX_RAM_PERCENTAGE` | No | `80` | Percentuale massima RAM per JVM |
-| `GOVPAY_GDE_JVM_INITIAL_RAM_PERCENTAGE` | No | - | Percentuale iniziale RAM per JVM |
-| `GOVPAY_GDE_JVM_MIN_RAM_PERCENTAGE` | No | - | Percentuale minima RAM per JVM |
-| `GOVPAY_GDE_JVM_MAX_METASPACE_SIZE` | No | - | Dimensione massima Metaspace |
-| `GOVPAY_GDE_JVM_MAX_DIRECT_MEMORY_SIZE` | No | - | Dimensione massima memoria diretta |
-| `GOVPAY_ORACLE_JDBC_URL_TYPE` | No | `servicename` | Tipo URL Oracle (servicename o sid) |
-| `JAVA_OPTS` | No | - | Opzioni aggiuntive JVM |
+L'elenco completo delle variabili d'ambiente dell'immagine e delle proprietà configurabili è nel [README](../README.md#esecuzione-con-docker).
 
 ### Impostazioni Predefinite
 
