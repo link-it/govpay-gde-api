@@ -1,3 +1,13 @@
+2026-11-04  Giuliano Pintori <pintori@link.it>
+
+	* [Documentazione] docker/DOCKER.md allineato all'immagine attuale.
+	Corretti gli esempi di build_image.sh (l'opzione -d non esiste, l'immagine
+	e' unica per tutti i database) e il percorso dei log; tolti i riferimenti a
+	.env.template e a un docker-compose.yml che il repository non ha, e la
+	sezione su A.C.A. con variabili inesistenti: il GDE si configura con il
+	connettore govpay_gde_api di GovPay. Le parti che ripetevano il README
+	(database, variabili, endpoint) rimandano al README.
+
 2026-09-24  Giuliano Pintori <pintori@link.it>
 
 	* [Logging] Transaction ID e Correlation ID (BP-LOG-3).
