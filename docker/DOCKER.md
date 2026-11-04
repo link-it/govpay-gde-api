@@ -1,251 +1,66 @@
 # GovPay GDE (Giornale degli Eventi) API - Configurazione Docker
 
-Containerizzazione Docker per il servizio REST API GovPay GDE che fornisce registrazione degli eventi e accesso al giornale per le applicazioni GovPay.
+Containerizzazione del servizio REST GovPay GDE, che registra gli eventi inviati dagli altri componenti di GovPay e ne consente la consultazione.
 
-## Panoramica
+Immagine, variabili d'ambiente, proprietà configurabili ed endpoint actuator sono descritti nel [README](../README.md#esecuzione-con-docker). Questo file copre la costruzione dell'immagine in locale, la configurazione dei componenti che scrivono eventi, la scansione delle vulnerabilita' e il contenuto dell'immagine.
 
-Questa configurazione Docker fornisce:
-- Supporto multi-database (PostgreSQL, MySQL/MariaDB, Oracle)
-- Servizio REST API leggero
-- Controlli di salute e monitoraggio
-- Connection pooling configurabile
-- Mappatura ORM per diversi database
-- Integrazione pronta per GovPay A.C.A. e altri servizi
+## Costruire l'immagine
 
-## Avvio Rapido
-
-### 1. Costruire l'Immagine Docker
+`build_image.sh` costruisce l'immagine `linkitaly/govpay-gde-api:<versione>`. L'immagine e' unica per tutti i database: il tipo si sceglie all'avvio con `GOVPAY_DB_TYPE`.
 
 ```bash
-# Build con supporto PostgreSQL (predefinito)
+cd docker
+
+# Ultima release pubblicata su GitHub
 ./build_image.sh
 
-# Build con database specifico
-./build_image.sh -v 3.8.0 -d postgresql
-./build_image.sh -v 3.8.0 -d mysql
-./build_image.sh -v 3.8.0 -d oracle
+# Release indicata
+./build_image.sh -v 2.0.0
+
+# Jar costruito in locale, con un tag a scelta
+./build_image.sh -l ../target/govpay-gde-api.jar -t linkitaly/govpay-gde-api:locale
 ```
 
-### 2. Configurare l'Ambiente
+| Opzione | Descrizione |
+|---|---|
+| `-v <versione>` | Release GitHub da cui scaricare il jar (default: l'ultima) |
+| `-l <file>` | Jar sul filesystem locale, al posto della release (usa `Dockerfile.daFile`) |
+| `-s <sha256>` | Checksum del jar della release (default: letto dalle API delle release di GitHub) |
+| `-t <repository>:<tag>` | Nome dell'immagine prodotta (default: `linkitaly/govpay-gde-api:<versione>`) |
+| `-e <path>` | Directory dell'applicazione nell'immagine (default: `/opt/govpay-gde`) |
+| `-f <path>` | Directory dei log nell'immagine (default: `/var/log/govpay-gde`) |
 
-```bash
-# Copiare il template e modificarlo
-cp .env.template .env
-nano .env
-```
-
-**Configurazione richiesta:**
-- `GOVPAY_DB_TYPE`: Tipo di database (postgresql, mysql, mariadb, oracle)
-- `GOVPAY_DB_SERVER`: Server del database (formato: host:porta)
-- `GOVPAY_DB_NAME`: Nome del database
-- `GOVPAY_DB_USER`: Username del database
-- `GOVPAY_DB_PASSWORD`: Password del database
-
-### 3. Avviare i Servizi
-
-```bash
-# Avviare con docker-compose
-docker-compose up -d
-
-# Visualizzare i log
-docker-compose logs -f govpay-gde-api
-
-# Verificare lo stato
-docker-compose ps
-
-# Testare l'API
-curl http://localhost:10002/actuator/health
-```
+Per avviarla, vedere l'esempio `docker run` nel [README](../README.md#esecuzione-con-docker).
 
 ## Driver JDBC
 
-I driver JDBC **non sono inclusi** nel fat jar e devono essere forniti esternamente.
-L'entrypoint imposta automaticamente `LOADER_PATH=/opt/jdbc-drivers` per il `PropertiesLauncher` di Spring Boot.
-
-I driver devono essere montati come volume nella directory `/opt/jdbc-drivers`:
+I driver JDBC **non sono inclusi** nell'immagine e vanno montati come volume in `/opt/jdbc-drivers` (directory modificabile con `GOVPAY_DS_JDBC_LIBS`). L'entrypoint imposta `LOADER_PATH` sulla directory per il `PropertiesLauncher` di Spring Boot.
 
 ```bash
-docker run -v ./jdbc-drivers:/opt/jdbc-drivers linkitaly/govpay-gde-api
+docker run -v ./jdbc-drivers:/opt/jdbc-drivers ... linkitaly/govpay-gde-api
 ```
 
-Per ulteriori dettagli sui driver supportati, consultare [jdbc-drivers/README.md](jdbc-drivers/README.md).
+I driver supportati sono elencati in [jdbc-drivers/README.md](jdbc-drivers/README.md).
 
-## Architettura
+## Componenti che scrivono eventi
 
-```
-┌─────────────────────────────────────┐
-│      GovPay GDE REST API            │
-│                                     │
-│  ┌──────────────────────────────┐  │
-│  │   Spring Boot Application    │  │
-│  │   - REST Controllers         │  │
-│  │   - Event Service            │  │
-│  │   - JPA Repositories         │  │
-│  └──────────────────────────────┘  │
-│              │                      │
-│              ▼                      │
-│  ┌──────────────────────────────┐  │
-│  │   HikariCP Connection Pool   │  │
-│  └──────────────────────────────┘  │
-└─────────────────┬───────────────────┘
-                  │
-                  ▼
-      ┌───────────────────────┐
-      │   Database (RDBMS)    │
-      │  - PostgreSQL         │
-      │  - MySQL/MariaDB      │
-      │  - Oracle             │
-      └───────────────────────┘
-```
+I batch e le API di GovPay (elencati nel [README](../README.md)) inviano gli eventi con `POST /eventi`. Non hanno proprieta' o variabili d'ambiente per il GDE: indirizzo e autenticazione sono nel connettore `govpay_gde_api` di GovPay (tabella `connettori`). Se il connettore non e' abilitato, gli eventi non vengono inviati; un GDE non raggiungibile non blocca il componente che scrive.
 
-## Configurazione Database
+Nella stessa rete Docker l'URL del connettore e' il nome del servizio con la porta del container, per esempio `http://govpay-gde-api:10002`.
 
-### PostgreSQL (Predefinito)
+## Impostazioni dell'immagine
 
-```env
-GOVPAY_DB_TYPE=postgresql
-GOVPAY_DB_SERVER=postgres:5432
-GOVPAY_DB_NAME=govpay
-GOVPAY_DB_USER=govpay
-GOVPAY_DB_PASSWORD=password_sicura
-```
+| Impostazione | Valore |
+|---|---|
+| Porta HTTP | `10002` |
+| Timezone | `Europe/Rome` |
+| Timeout di connessione del pool | `20000` ms |
+| Timeout di inattivita' del pool | `10000` ms |
+| Durata massima di una connessione | `600000` ms |
+| File di log | `/var/log/govpay-gde/govpay-gde-api.log` |
+| Utente | `govpay` (non root) |
 
-### MySQL/MariaDB
-
-```env
-GOVPAY_DB_TYPE=mysql
-GOVPAY_DB_SERVER=mysql:3306
-GOVPAY_DB_NAME=govpay
-GOVPAY_DB_USER=govpay
-GOVPAY_DB_PASSWORD=password_sicura
-GOVPAY_DS_CONN_PARAM=zeroDateTimeBehavior=convertToNull
-```
-
-Modificare `docker-compose.yml` per decommentare il servizio MySQL.
-
-### Oracle
-
-```env
-GOVPAY_DB_TYPE=oracle
-GOVPAY_DB_SERVER=oracle:1521
-GOVPAY_DB_NAME=XE
-GOVPAY_DB_USER=govpay
-GOVPAY_DB_PASSWORD=password_sicura
-GOVPAY_ORACLE_JDBC_URL_TYPE=servicename  # oppure 'sid'
-```
-
-
-## Integrazione con GovPay A.C.A.
-
-Per utilizzare GDE con il processore batch A.C.A.:
-
-### 1. Condividere il Database
-
-Entrambi i servizi possono utilizzare lo stesso database:
-
-```yaml
-# In docker-compose.yml per entrambi i servizi
-networks:
-  - govpay-network
-```
-
-### 2. Configurare A.C.A. per Utilizzare GDE
-
-Nel file `.env` di A.C.A.:
-```env
-GDE_ENABLED=true
-GDE_BASE_URL=http://govpay-gde-api:10002
-```
-
-### 3. Esempio di docker-compose.yml Combinato
-
-```yaml
-version: '3.8'
-
-services:
-  postgres:
-    image: postgres:15-alpine
-    # ... shared database config
-
-  govpay-gde-api:
-    image: linkitaly/govpay-gde:3.8.0_postgresql
-    depends_on:
-      - postgres
-    # ... GDE config
-
-  govpay-aca:
-    image: linkitaly/govpay-aca:3.8.0_postgresql
-    depends_on:
-      - postgres
-      - govpay-gde-api
-    environment:
-      IT_GOVPAY_GDE_ENABLED: "true"
-      IT_GOVPAY_GDE_CLIENT_BASEURL: "http://govpay-gde-api:10002"
-    # ... ACA config
-
-networks:
-  govpay-network:
-```
-
-## Riferimento Configurazione
-
-### Variabili d'Ambiente
-
-L'elenco completo delle variabili d'ambiente dell'immagine e delle proprietà configurabili è nel [README](../README.md#esecuzione-con-docker).
-
-### Impostazioni Predefinite
-
-Queste sono incorporate nell'immagine Docker:
-- Timezone: `Europe/Rome`
-- Timeout connessione: `20000ms`
-- Timeout idle: `10000ms`
-- File di log: `/var/log/govpay/govpay-gde-api.log`
-
-### File di Mappatura ORM
-
-Il servizio seleziona automaticamente la mappatura ORM corretta in base al tipo di database:
-- **PostgreSQL**: `META-INF/orm-postgres.xml`
-- **MySQL/MariaDB**: `META-INF/orm-mysql.xml`
-- **Oracle**: `META-INF/orm-oracle.xml`
-
-## Endpoint API
-
-Una volta avviato, sono disponibili i seguenti endpoint:
-
-### Health Check
-```bash
-curl http://localhost:10002/actuator/health
-```
-
-### Metriche Prometheus
-```bash
-curl http://localhost:10002/actuator/prometheus
-```
-
-### Informazioni
-```bash
-curl http://localhost:10002/actuator/info
-```
-
-## Ottimizzazione delle Prestazioni
-
-### Connection Pool
-
-Per scenari ad alto traffico:
-
-```env
-GOVPAY_GDE_MIN_POOL=5
-GOVPAY_GDE_MAX_POOL=20
-```
-
-### Opzioni JVM
-
-Per deployment in produzione:
-
-```env
-JAVA_OPTS=-XX:+UseG1GC -XX:MaxGCPauseMillis=100
-GOVPAY_GDE_JVM_MAX_RAM_PERCENTAGE=90
-```
+L'entrypoint sceglie il mapping ORM in base a `GOVPAY_DB_TYPE`: `META-INF/orm-postgres.xml`, `orm-mysql.xml` (anche per MariaDB) o `orm-oracle.xml`.
 
 ## War per il deploy su application server
 
@@ -259,7 +74,7 @@ Per estrarlo:
 
 ```bash
 # Creare un container senza avviarlo e copiare il war
-id=$(docker create linkitaly/govpay-gde-api-dev:2.0.0-SNAPSHOT)
+id=$(docker create linkitaly/govpay-gde-api-dev:2.0.1-SNAPSHOT)
 docker cp "${id}:/opt/govpay-gde/dist/govpay-gde-api.war" ./govpay-gde-api.war
 docker rm "${id}"
 ```
@@ -327,16 +142,13 @@ govpay-gde-api/
 │   ├── jdbc-drivers/
 │   │   └── README.md               # Documentazione driver JDBC
 │   ├── scan_image.sh               # Scansione dell'immagine (Trivy, Grype)
+│   ├── DOCKERHUB.md                # Descrizione della pagina Docker Hub
 │   └── DOCKER.md                   # Questo file
 ├── src/                            # Codice sorgente Java
 ├── pom.xml                         # Configurazione Maven
-└── README.md                       # Documentazione sviluppo Java
+└── README.md                       # Documentazione del progetto
 ```
 
 ## Supporto
 
-Per problemi relativi a:
-- **GovPay**: https://github.com/link-it/govpay
-- **Sviluppo Java**: Vedere `README.md`
-- **Configurazione Docker**: Contattare il team DevOps
-
+Segnalazioni e richieste: [issue del progetto](https://github.com/link-it/govpay-gde-api/issues).
