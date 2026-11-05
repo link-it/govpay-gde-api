@@ -100,6 +100,7 @@ class UC_3_AddEventoTest {
 		nuovoEvento.setIdFr(1l);
 		nuovoEvento.setIdPagamento("idPagamento");
 		nuovoEvento.setIdPendenza("idPendenza");
+		nuovoEvento.setCodDocumento("codDocumento");
 		nuovoEvento.setIdRiconciliazione(1l);
 		nuovoEvento.setIdTracciato(1l);
 		nuovoEvento.setIuv("iuv");
@@ -146,6 +147,7 @@ class UC_3_AddEventoTest {
 		assertEquals(nuovoEvento.getIdFr(), eventoDetail.getInt("idFr"));
 		assertEquals(nuovoEvento.getIdPagamento(), eventoDetail.getString("idPagamento"));
 		assertEquals(nuovoEvento.getIdPendenza(), eventoDetail.getString("idPendenza"));
+		assertEquals(nuovoEvento.getCodDocumento(), eventoDetail.getString("codDocumento"));
 		assertEquals(nuovoEvento.getIdRiconciliazione(), eventoDetail.getInt("idRiconciliazione"));
 		assertEquals(nuovoEvento.getIdTracciato(), eventoDetail.getInt("idTracciato"));
 		assertEquals(nuovoEvento.getIuv(), eventoDetail.getString("iuv"));

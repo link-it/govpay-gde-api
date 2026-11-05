@@ -84,7 +84,7 @@ public class GdeController implements EventiApi{
 	public ResponseEntity<ListaEventi> findEventi(Long offset,
 			Integer limit, OffsetDateTime dataDa, OffsetDateTime dataA,
 			List<String> idDominio, String iuv, String ccp,
-			String idA2A, String idPendenza, CategoriaEvento categoriaEvento,
+			String idA2A, String idPendenza, String codDocumento, CategoriaEvento categoriaEvento,
 			EsitoEvento esito, RuoloEvento ruolo, String sottotipoEvento, String tipoEvento,
 			ComponenteEvento componente, Integer severitaDa, Integer severitaA,
 			String messaggi, Boolean total, PagingMode pagingMode,
@@ -93,7 +93,7 @@ public class GdeController implements EventiApi{
 		this.logger.debug("Ricerca eventi [pagingMode={}, total={}]...", pagingMode, total);
 
 		EventoSearchQuery query = new EventoSearchQuery(offset, limit, dataDa, dataA, idDominio, iuv, ccp,
-				idA2A, idPendenza, categoriaEvento, esito, ruolo, sottotipoEvento, tipoEvento, componente,
+				idA2A, idPendenza, codDocumento, categoriaEvento, esito, ruolo, sottotipoEvento, tipoEvento, componente,
 				severitaDa, severitaA, messaggi, Boolean.TRUE.equals(total), pagingMode, cursorData, cursorId);
 
 		EventoSearchResult result = this.eventoSearchService.search(query);

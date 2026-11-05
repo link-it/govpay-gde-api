@@ -99,6 +99,9 @@ public class EventoEntity {
 	
 	@Column(name = "cod_versamento_ente")
 	private String codVersamentoEnte;
+
+	@Column(name = "cod_documento")
+	private String codDocumento;
 	
 	@Column(name = "cod_applicazione")
 	private String codApplicazione;

@@ -104,6 +104,13 @@ public class EventoFilters {
 		return addEqualCondition(EventoEntity_.COD_VERSAMENTO_ENTE,idPendenza);
 	}
 
+	public static Specification<EventoEntity> byCodDocumento(String codDocumento) {
+		if (codDocumento == null) {
+			return null;
+		}
+		return addEqualCondition(EventoEntity_.COD_DOCUMENTO,codDocumento);
+	}
+
 	public static Specification<EventoEntity> bySeveritaDa(Integer severitaDa) {
 		if (severitaDa == null) {
 			return null;
