@@ -19,6 +19,7 @@ public record EventoSearchQuery(
 		String ccp,
 		String idA2A,
 		String idPendenza,
+		String codDocumento,
 		CategoriaEvento categoriaEvento,
 		EsitoEvento esito,
 		RuoloEvento ruolo,

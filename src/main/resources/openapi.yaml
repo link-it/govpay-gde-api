@@ -23,6 +23,7 @@ paths:
         - $ref: '#/components/parameters/Ccp'
         - $ref: '#/components/parameters/IdA2A'
         - $ref: '#/components/parameters/IdPendenza'
+        - $ref: '#/components/parameters/CodDocumento'
         - $ref: '#/components/parameters/CategoriaEvento'
         - $ref: '#/components/parameters/EsitoEvento'
         - $ref: '#/components/parameters/RuoloEvento'
@@ -125,6 +126,13 @@ components:
       name: ccp
       in: query
       description: Codice contesto pagamento
+      required: false
+      schema:
+        type: string
+    CodDocumento:
+      name: codDocumento
+      in: query
+      description: Filtro per identificativo della posizione debitoria complessiva
       required: false
       schema:
         type: string
@@ -621,6 +629,10 @@ components:
         idPendenza:
           pattern: "(^[a-zA-Z0-9\\-_]{1,35}$)"
           type: string
+        codDocumento:
+          pattern: "(^[a-zA-Z0-9\\-_]{1,35}$)"
+          type: string
+          description: Identificativo della posizione debitoria complessiva (business key codDocumento+idApplicazione+idDominio).
         idPagamento:
           maxLength: 35
           minLength: 0

@@ -78,6 +78,7 @@ public class EventoSearchService {
 						EventoFilters.byCcp(query.ccp()),
 						EventoFilters.byIdA2A(query.idA2A()),
 						EventoFilters.byIdPendenza(query.idPendenza()),
+						EventoFilters.byCodDocumento(query.codDocumento()),
 						EventoFilters.byCategoriaEvento(query.categoriaEvento()),
 						EventoFilters.byEsitoEvento(query.esito()),
 						EventoFilters.byRuoloEvento(query.ruolo()),

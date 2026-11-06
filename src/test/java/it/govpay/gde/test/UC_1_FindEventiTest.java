@@ -139,6 +139,18 @@ class UC_1_FindEventiTest {
 	}
 
 	@Test
+	void UC_1_07_02_FindAll_ByCodDocumento() throws Exception {
+		String parametro = "docDocumento_01";
+		this.mockMvc.perform(get(Costanti.EVENTI_PATH)
+								.param("codDocumento", parametro)
+								.param("total", "true")
+								)
+					.andExpect(status().isOk())
+					.andExpect(jsonPath("$.page.total", is(1)))
+					.andExpect(jsonPath("$.items[0].codDocumento", is(parametro)));
+	}
+
+	@Test
 	void UC_1_08_FindAll_ByCategoriaEvento() throws Exception {
 		String parametro = "INTERFACCIA";
 		this.mockMvc.perform(get(Costanti.EVENTI_PATH)
