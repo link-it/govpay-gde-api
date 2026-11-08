@@ -1,3 +1,14 @@
+2026-11-08  Giuliano Pintori <pintori@link.it>
+
+	* [Dipendenze] Swagger UI 5.34.1 (link-it/govpay-bom#7).
+	govpay-bom porta swagger-ui alla 5.34.1, con DOMPurify 3.4.17, per
+	CVE-2026-116802, CVE-2026-116803 e CVE-2026-116804. springdoc compone
+	il percorso della Swagger UI con la propria versione (5.34.0): ora la
+	legge dal BOM con springdoc.swagger-ui.version=@swagger-ui.version@,
+	altrimenti /swagger-ui/index.html risponde 404.
+	Tolto dal pom il blocco <resources>, che filtrava tutta src/main/resources
+	al posto del filtro dei file application* del BOM.
+
 2026-11-04  Giuliano Pintori <pintori@link.it>
 
 	* [Documentazione] docker/DOCKER.md allineato all'immagine attuale.
