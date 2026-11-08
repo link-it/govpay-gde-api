@@ -70,6 +70,7 @@ Le proprietà si impostano in `application.properties`, da riga di comando (`-D<
 | `spring.jackson.default-property-inclusion` | `non_null` | Esclude i campi nulli dalle risposte JSON |
 | `server.error.whitelabel.enabled` | `true` | Pagina di errore di default di Spring Boot |
 | `spring.main.banner-mode` | `off` | Banner di Spring Boot all'avvio |
+| `springdoc.swagger-ui.version` | `@swagger-ui.version@` | Versione della Swagger UI, presa in build dal govpay-bom: springdoc la usa per il percorso del webjar. Da non cambiare |
 
 ### Database
 
