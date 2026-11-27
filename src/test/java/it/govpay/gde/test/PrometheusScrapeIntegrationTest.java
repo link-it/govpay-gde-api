@@ -1,8 +1,8 @@
 package it.govpay.gde.test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -18,6 +18,11 @@ import org.springframework.test.context.ActiveProfiles;
 
 import it.govpay.gde.Application;
 import it.govpay.gde.test.costanti.Costanti;
+import java.sql.Connection;
+import java.sql.SQLException;
+import javax.sql.DataSource;
+import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Verifica end-to-end dell'esposizione delle metriche Prometheus:
@@ -99,5 +104,19 @@ class PrometheusScrapeIntegrationTest {
                 .GET()
                 .build();
         return http.send(request, HttpResponse.BodyHandlers.ofString());
+    }
+
+    @Autowired
+    private DataSource dataSource;
+
+    /**
+     * #48: il pool usa READ_COMMITTED come il core GovPay, non il default del database.
+     */
+    @Test
+    void isolamentoReadCommitted() throws SQLException {
+        assertEquals("TRANSACTION_READ_COMMITTED", dataSource.unwrap(HikariDataSource.class).getTransactionIsolation());
+        try (Connection connection = dataSource.getConnection()) {
+            assertEquals(Connection.TRANSACTION_READ_COMMITTED, connection.getTransactionIsolation());
+        }
     }
 }
