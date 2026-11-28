@@ -1,6 +1,7 @@
 package it.govpay.gde.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -12,6 +13,7 @@ import java.time.ZoneId;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -26,6 +28,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import it.govpay.gde.Application;
 import it.govpay.gde.test.costanti.Costanti;
+import it.govpay.gde.utils.OffsetDateTimeDeserializer;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
@@ -96,6 +99,14 @@ class UC_6_DateEventoTest {
 					.contentType(MediaType.APPLICATION_JSON))
 					.andExpect(status().isBadRequest());
 		}
+	}
+
+	@ParameterizedTest(name = "[{index}] \"{0}\"")
+	@DisplayName("Una data vuota non ha valore")
+	@NullAndEmptySource
+	@ValueSource(strings = "   ")
+	void dataVuotaSenzaValore(String ricevuta) {
+		assertNull(new OffsetDateTimeDeserializer().parseOffsetDateTime(ricevuta));
 	}
 
 	private static String evento(String dataEvento, String dataOraRichiesta, String dataOraRisposta) {
