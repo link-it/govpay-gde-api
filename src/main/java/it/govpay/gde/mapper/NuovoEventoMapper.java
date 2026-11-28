@@ -3,6 +3,7 @@ package it.govpay.gde.mapper;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -11,6 +12,7 @@ import org.mapstruct.Named;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+import it.govpay.common.utils.DateTimePatterns;
 import it.govpay.gde.beans.NuovoEvento;
 import it.govpay.gde.entity.DatiPagoPA;
 import it.govpay.gde.entity.DettaglioRichiesta;
@@ -80,8 +82,8 @@ public interface NuovoEventoMapper {
 	@Named("convertData")
 	public default LocalDateTime offsetDateTimeToLocalDateTime(OffsetDateTime offsetDateTime) {
 		if(offsetDateTime == null) return null;
-		
-		return offsetDateTime.toLocalDateTime();
+
+		return offsetDateTime.atZoneSameInstant(ZoneId.of(DateTimePatterns.DEFAULT_TIME_ZONE)).toLocalDateTime();
 	}
 	
 	
